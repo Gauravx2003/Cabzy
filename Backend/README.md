@@ -398,6 +398,110 @@ The endpoint expects a JSON payload with the following structure:
 
 ---
 
+## `/captains/profile` Endpoint Documentation
+
+### Description
+Get the authenticated captain's profile information including vehicle and status details. This endpoint requires captain authentication using a valid JWT token.
+
+### HTTP Method
+**GET**
+
+### Authentication
+Requires a valid JWT token in one of:
+- Cookie named 'token'
+- Authorization header: `Bearer <token>`
+
+### Responses
+#### Success
+- **Status Code**: `200 OK`
+- **Response Body**:
+  ```json
+  {
+    "captain": {
+      "_id": "captain_id",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "johndoe@example.com",
+      "status": "active",
+      "vehicle": {
+        "color": "Black",
+        "plate": "ABC-123",
+        "capacity": 4,
+        "vehicleType": "car"
+      },
+      "socketID": null,
+      "location": {
+        "latitude": 12.345678,
+        "longitude": 98.765432
+      }
+    }
+  }
+  ```
+
+#### Authentication Error
+- **Status Code**: `401 Unauthorized`
+- **Response Body**:
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+
+### Example cURL Request
+```bash
+curl -X GET http://localhost:3000/captains/profile \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
+## `/captains/logout` Endpoint Documentation
+
+### Description
+Logs out the current captain by invalidating their JWT token and clearing the token cookie. This endpoint requires captain authentication.
+
+### HTTP Method
+**GET**
+
+### Authentication
+Requires a valid JWT token in one of:
+- Cookie named 'token'
+- Authorization header: `Bearer <token>`
+
+### Responses
+#### Success
+- **Status Code**: `200 OK`
+- **Response Body**:
+  ```json
+  {
+    "message": "Logged out successfully"
+  }
+  ```
+
+#### Authentication Error
+- **Status Code**: `401 Unauthorized`
+- **Response Body**:
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+
+### Effects
+- Clears the 'token' cookie
+- Adds the token to blacklist to prevent reuse
+- Invalidates the current captain session
+
+### Example cURL Request
+```bash
+curl -X GET http://localhost:3000/captains/logout \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
 ## Notes
 - Both endpoints use `express-validator` to validate input data.
 - Passwords are hashed using bcrypt before saving to the database.

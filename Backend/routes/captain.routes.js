@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router(); // Create a new router instance
 const { body } = require('express-validator'); // Import body validator from express-validator
 const captainController = require('../controllers/captain.controller'); // Import captain controller
+const authMiddleware = require('../middlewares/auth.middleware'); // Import authentication middleware
 
 router.post('/register', [  // Define validation rules for the registration route
     body('fullname.firstname').notEmpty().withMessage('First name is required'), // Validate first name
@@ -17,6 +18,16 @@ router.post('/register', [  // Define validation rules for the registration rout
     captainController.registerCaptain // Register route with validation and controller
 
 );
+
+router.post('/login', [ // Define validation rules for the login route
+    body('email').isEmail().withMessage('Invalid email address'), // Validate email format
+    body('password').notEmpty().withMessage('Password is required') // Validate password presence
+], 
+    captainController.login // Login route with validation and controller
+)
+
+router.get('/profile', authMiddleware.captainAuth, captainController.getCaptainProfile); // Get captain profile route with authentication middleware
+router.get('/logout', authMiddleware.captainAuth, captainController.logout); // Logout route with authentication middleware
 
 
 module.exports = router; // Export the router for use in other files
