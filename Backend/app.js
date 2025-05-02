@@ -14,18 +14,13 @@ const connectDB = require('./db/db'); // Import the database connection function
 connectDB(); // Connect to the database
 
 const userRoutes = require("./routes/user.routes"); // Import user routes
-
-
-
-app.get("/", (req, res) => {
-  console.log("GET / route was hit");
-  res.send("Hello World!");
-});
+const captainRoutes = require("./routes/captain.routes"); // Import captain routes
 
 app.use(cookieParser()); // 🔥 This line enables reading cookies from requests
 app.use(express.json()); // Parse incoming JSON requests
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded requests
 app.use("/users", userRoutes); // Use user routes for API requests
+app.use("/captains", captainRoutes); // Use captain routes for API requests
 
 
 module.exports = app;

@@ -10,7 +10,13 @@ module.exports.register = async (req, res, next) => { // Define the register fun
         return res.status(422).json({ errors: erroes.array() }); // Return validation errors with status 422
     }
     
-    const { fullname,  email, password } = req.body; // Destructure request body
+    const { fullname, email, password } = req.body; // Destructure request body
+
+    const isUserExists = await userModel.findOne({ email }); // Check if a user with the provided email already exists
+    if (isUserExists) { // If a user with the provided email already exists
+        return res.status(409).json({ error: "User already exists" }); // Return conflict error
+    }
+
 
     const hashedPassword = await userModel.hashPassword(password); // Hash the password using the user model's method
 

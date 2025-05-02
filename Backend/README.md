@@ -67,8 +67,6 @@ The endpoint expects a JSON payload with the following structure:
   }
   ```
 
-
-
 ## Example Response
 - `user` (object):
   - `fullname` (object):
@@ -149,7 +147,6 @@ The endpoint expects a JSON payload with the following structure:
     "error": "Invalid email or password"
   }
   ```
-
 
 ## Example Response
 - `user` (object):
@@ -260,6 +257,144 @@ Requires a valid JWT token in one of:
 curl -X GET http://localhost:3000/users/logout \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
+
+---
+
+# Captain API Documentation
+
+## `/captains/register` Endpoint Documentation
+
+### Description
+The `/captains/register` endpoint allows new captains to register their account with vehicle details. Upon successful registration, the endpoint creates a new captain record and returns the captain data.
+
+### HTTP Method
+**POST**
+
+### Request Body
+The endpoint expects a JSON payload with the following structure:
+
+```json
+{
+  "fullname": {
+    "firstname": "John",
+    "lastname": "Doe"
+  },
+  "email": "johndoe@example.com",
+  "password": "securePassword123",
+  "vehicle": {
+    "color": "Black",
+    "plate": "ABC-123",
+    "capacity": 4,
+    "vehicleType": "car"
+  }
+}
+```
+
+#### Field Details
+- **fullname**
+  - **firstname**: (String) Captain's first name (required)
+  - **lastname**: (String) Captain's last name (required)
+- **email**: (String) Valid email address (required, must be unique)
+- **password**: (String) Password with minimum 6 characters (required)
+- **vehicle**
+  - **color**: (String) Vehicle color (required)
+  - **plate**: (String) Vehicle plate number (required)
+  - **capacity**: (Number) Vehicle passenger capacity, minimum 1 (required)
+  - **vehicleType**: (String) Type of vehicle, must be one of: 'car', 'motorcycle', 'auto' (required)
+
+### Responses
+#### Success
+- **Status Code**: `201 Created`
+- **Response Body**:
+  ```json
+  {
+    "captain": {
+      "_id": "captain_id",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "johndoe@example.com",
+      "status": "inactive",
+      "vehicle": {
+        "color": "Black",
+        "plate": "ABC-123",
+        "capacity": 4,
+        "vehicleType": "car"
+      },
+      "socketID": null,
+      "location": {
+        "latitude": null,
+        "longitude": null
+      }
+    }
+  }
+  ```
+
+#### Validation Error
+- **Status Code**: `422 Unprocessable Entity`
+- **Response Body**:
+  ```json
+  {
+    "errors": [
+      {
+        "msg": "First name is required",
+        "param": "fullname.firstname",
+        "location": "body"
+      },
+      {
+        "msg": "Vehicle capacity must be at least 1",
+        "param": "vehicle.capacity",
+        "location": "body"
+      },
+      {
+        "msg": "Invalid vehicle type",
+        "param": "vehicle.vehicleType",
+        "location": "body"
+      }
+    ]
+  }
+  ```
+
+#### Conflict Error
+- **Status Code**: `409 Conflict`
+- **Response Body**:
+  ```json
+  {
+    "error": "Captain with this email already exists"
+  }
+  ```
+
+## Example Response
+- `user` (object):
+  - `fullname` (object):
+    - `firstname` (string): User's first name
+    - `lastname` (string): User's last name
+  - `email` (string): Users's email (must be valid)
+  - `password` (string): Users's password (must be min 6)
+  - `vehicle` (object):
+    - `color`(string): Vehicle Color
+    - `plate`(string): Vehicle's Number Plate
+    - `capacity`(number): Vehicle Passenger Capacity (minimum 1)
+    - `VehicleType`(string): Type of Vehicle (must be 'car', 'motorcycle' or 'auto')
+  - `token` (string): JWT Token
+
+### Captain Model Details
+#### Status Types
+- **active**: Captain is currently available for rides
+- **inactive**: Captain is not available for rides
+
+#### Vehicle Types
+- **car**: Standard car service
+- **motorcycle**: Motorcycle service
+- **auto**: Auto-rickshaw service
+
+### Notes
+- Newly registered captains are set to 'inactive' status by default
+- Location coordinates are initially set to null until the captain updates their location
+- Password is hashed using bcrypt before storage
+- Email addresses are stored in lowercase and must be unique
+- Vehicle capacity must be at least 1 passenger
 
 ---
 
