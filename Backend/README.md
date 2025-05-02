@@ -160,7 +160,106 @@ The endpoint expects a JSON payload with the following structure:
   - `password` (string): Users's password (must be min 6)
   - `token` (string): JWT Token
 
+---
 
+## `/users/profile` Endpoint Documentation
+
+### Description
+Get the authenticated user's profile information. This endpoint requires authentication using a valid JWT token.
+
+### HTTP Method
+**GET**
+
+### Authentication
+Requires a valid JWT token in one of:
+- Cookie named 'token'
+- Authorization header: `Bearer <token>`
+
+### Responses
+#### Success
+- **Status Code**: `200 OK`
+- **Response Body**:
+  ```json
+  {
+    "user": {
+      "_id": "user_id",
+      "fullname": {
+        "firstname": "John",
+        "lastname": "Doe"
+      },
+      "email": "johndoe@example.com",
+      "socketID": null
+    }
+  }
+  ```
+
+#### Authentication Error
+- **Status Code**: `401 Unauthorized`
+- **Response Body**:
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+
+### Example cURL Request
+```bash
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+## Example Response
+- `user` (object):
+  - `fullname` (object):
+    - `firstname` (string): User's first name
+    - `lastname` (string): User's last name
+  - `email` (string): Users's email (must be valid)
+ 
+
+---
+
+## `/users/logout` Endpoint Documentation
+
+### Description
+Logs out the current user by invalidating their JWT token and clearing the token cookie.
+
+### HTTP Method
+**GET**
+
+### Authentication
+Requires a valid JWT token in one of:
+- Cookie named 'token'
+- Authorization header: `Bearer <token>`
+
+### Responses
+#### Success
+- **Status Code**: `200 OK`
+- **Response Body**:
+  ```json
+  {
+    "message": "Logged out successfully"
+  }
+  ```
+
+#### Authentication Error
+- **Status Code**: `401 Unauthorized`
+- **Response Body**:
+  ```json
+  {
+    "error": "Unauthorized"
+  }
+  ```
+
+### Effects
+- Clears the 'token' cookie
+- Adds the token to blacklist to prevent reuse
+- Invalidates the current session
+
+### Example cURL Request
+```bash
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
 
 ---
 
@@ -168,3 +267,13 @@ The endpoint expects a JSON payload with the following structure:
 - Both endpoints use `express-validator` to validate input data.
 - Passwords are hashed using bcrypt before saving to the database.
 - JWT tokens are generated for authenticated users with a 1-hour expiration.
+
+---
+
+## Authentication Notes
+- Protected endpoints require a valid JWT token
+- Tokens can be provided via:
+  - HTTP-only cookie named 'token'
+  - Authorization header in format: `Bearer <token>`
+- Blacklisted tokens cannot be reused
+- Tokens expire after 24 hours

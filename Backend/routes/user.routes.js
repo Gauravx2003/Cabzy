@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router(); // Create a new router instance
 const { body } = require('express-validator'); // Import body validator from express-validator
 const userController = require('../controllers/user.controller'); // Import user controller
+const authMiddleware = require('../middlewares/auth.middleware'); // Import authentication middleware
 
 router.post('/register', [  // Define validation rules for the registration route
     body('fullname.firstname').notEmpty().withMessage('First name is required'), // Validate first name
@@ -20,6 +21,9 @@ router.post('/login', [ // Define validation rules for the login route
     userController.login // Login route with validation and controller
 
 )
+
+router.get('/profile', authMiddleware.userAuth, userController.getUserProfile); // Get user profile route with authentication middleware
+router.get('/logout', authMiddleware.userAuth, userController.logout); // Logout route with authentication middleware
 
 
 

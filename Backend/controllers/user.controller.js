@@ -1,6 +1,7 @@
 const userModel = require('../db/models/user.model'); // Import the user model
 const userService = require('../services/user.service'); // Import the user service
 const { validationResult } = require('express-validator'); // Import validationResult from express-validator
+const blacklistTokenModel = require('../db/models/blacklistToken.model'); // Import the blacklist token model
 
 module.exports.register = async (req, res, next) => { // Define the register function
     
@@ -50,9 +51,25 @@ module.exports.login = async (req, res, next) => { // Define the login function
        }
 
        const token = await user.generateAuthToken(); // Generate an authentication token for the user
+       res.cookie('token', token); // Set the token in a cookie
        res.status(200).json({ user, token }); // Send response with user data and token
     }catch (error) {
         res.status(400).json({ error: error.message }); // Handle errors and send response
     }
 
+}
+
+module.exports.getUserProfile = async (req, res, next) => { // Define the getUserProfile function
+    
+     res.status(200).json({ user: req.user }); // Send response with user data from request object
+
+} 
+
+module.exports.logout = async (req, res, next) => { // Define the logout function
+    res.clearCookie('token'); // Clear the token cookie
+    const token = req.cookies.token || req.headers.authorization.split(' ')[1]; // Get the token from cookies
+
+    await blacklistTokenModel.create({ token }); // Blacklist the token by saving it to the database
+
+    res.status(200).json({ message: "Logged out successfully" }); // Send response indicating successful logout
 }
