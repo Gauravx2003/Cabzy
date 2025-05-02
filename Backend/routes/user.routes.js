@@ -13,6 +13,14 @@ router.post('/register', [  // Define validation rules for the registration rout
 
 );
 
+router.post('/login', [ // Define validation rules for the login route
+    body('email').isEmail().withMessage('Invalid email address'), // Validate email format
+    body('password').notEmpty().withMessage('Password is required') // Validate password presence
+], 
+    userController.login // Login route with validation and controller
+
+)
+
 
 
 
