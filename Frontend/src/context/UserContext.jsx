@@ -1,5 +1,4 @@
-import React, { createContext } from "react";
-import { UNSAFE_getTurboStreamSingleFetchDataStrategy } from "react-router-dom";
+import React, { createContext, useState } from "react";
 
 export const UserDataContext = createContext();
 
@@ -8,8 +7,8 @@ export const UserDataContext = createContext();
 const UserContext = ({children}) => {
     const [user, setUser] = useState({
         fullname:{
-            firstName:"",
-            lastName:""
+            firstname:"",
+            lastname:""
         },
         email:"",
     })
@@ -17,7 +16,7 @@ const UserContext = ({children}) => {
 
     return (
         <div>
-            <UserDataContext.Provider value={[user, setUser]}>
+            <UserDataContext.Provider value={{user, setUser}}>
                 {children}
             </UserDataContext.Provider>
         </div>
