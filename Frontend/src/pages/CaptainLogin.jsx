@@ -1,21 +1,36 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import bg from "../images/Cabzy_bg.png";
-import logo from "../images/Cabzy_logo.png";
+import { Link, useNavigate } from "react-router-dom";
+import bg from "../assets/images/Cabzy_bg.png";
+import logo from "../assets/images/Cabzy_logo.png";
+import axios from "axios";
+import { CaptainDataContext } from "../context/CaptainContext";
+
 
 const CaptainLogin = () => {
        
         const [email, setEmail] = React.useState('');
         const [password, setPassword] = React.useState('');
         const [userData, setUserData] = React.useState({});
+
+        const navigate = useNavigate();
+        const {captain, setCaptain} = React.useContext(CaptainDataContext);
     
         const submitHandler = async (e) => {
             e.preventDefault();
-            setUserData({
+            const captainData={
                 email: email,
                 password: password
-            })
-            console.log(userData)
+            }
+
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/captains/login`, captainData);
+            if(response.status === 200) {   
+                const data = response.data;
+                setCaptain(data.captain);
+                localStorage.setItem('token', data.token);
+                navigate('/captain-home');
+            }
+
+            //console.log(userData)
             setEmail('');
             setPassword('');
         }

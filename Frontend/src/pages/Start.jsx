@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import bg from "../images/Cabzy_bg.png";
-import logo from "../images/Cabzy_logo.png";
+import bg from "../assets/images/Cabzy_bg.png";
+import logo from "../assets/images/Cabzy_logo.png";
 
 const Start = () => {
   return (

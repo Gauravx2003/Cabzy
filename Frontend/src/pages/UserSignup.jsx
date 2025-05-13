@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../images/Cabzy_logo.png";
+import logo from "../assets/images/Cabzy_logo.png";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
 

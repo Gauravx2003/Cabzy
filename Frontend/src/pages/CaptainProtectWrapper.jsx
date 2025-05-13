@@ -1,36 +1,35 @@
 import React, {useContext, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
-import { UserDataContext } from "../context/UserContext";
+import { CaptainDataContext } from "../context/CaptainContext";
 import axios from "axios";
 
-const UserProtectWrapper = ({children}) => {
+const CaptainProtectWrapper = ({children}) => {
    
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
-    const { user, setUserData } = useContext(UserDataContext);
+    const { captainData, setCaptainData } = useContext(CaptainDataContext);
     const [isLoading, setIsLoading] = React.useState(true);
 
     useEffect(() => {
         if (!token) {
-            navigate("/login");
+            navigate("/captain-login");
         }
     }, [token, navigate]);
 
-    axios.get(`${import.meta.env.VITE_BACKEND_URL}/users/profile`, {
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/captains/profile`, {
         headers: {
             Authorization: `Bearer ${token}`
         }
     }).then((response) => {
         if (response.status !== 200) {
-            console.log(response.data);
-            setUserData(response.data.user);
+            setCaptainData(response.data.captain);
             setIsLoading(false);
-            navigate("/login");
+            navigate("/captain-login");
         }
     }).catch((error) => {
-        console.error("Error fetching User profile:", error);
+        console.error("Error fetching captain profile:", error);
         localStorage.removeItem("token");
-        navigate("/login");
+        navigate("/captain-login");
     });
 
     return (
@@ -40,4 +39,4 @@ const UserProtectWrapper = ({children}) => {
     );
 } 
 
-export default UserProtectWrapper;
+export default CaptainProtectWrapper
