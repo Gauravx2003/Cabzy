@@ -30,6 +30,8 @@ async function getFare(origin, destination) {
     return fares;
 } // Define the getFare function
 
+module.exports.getFare = getFare; // Export the getFare function
+
 function getOTP(num){
     if (!num || num <= 0) {
         throw new Error("Number of digits must be greater than 0");
