@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import axios from 'axios';
 import logo from "../assets/images/Cabzy_logo.png";
 import mp from "../assets/images/map.jpg";
 import { MdLocationPin } from "react-icons/md";
@@ -18,6 +19,8 @@ const Home = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedRide, setSelectedRide] = useState(null);
   const [active, setActive] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [searchTimeout, setSearchTimeout] = useState(null);
   
   const ridesPanelRef = useRef(null);
   const driverPanelRef = useRef(null);
@@ -30,25 +33,67 @@ const Home = () => {
     setIsPanelExpanded(true);
     setIsRidesPanelVisible(false);
     setIsLookingForDriverVisible(false);
-    console.log(active);
+    ///console.log(active);
   };
 
   const handleCollapsePanel = () => {
     setIsPanelExpanded(false);
   };
 
+  const fetchSuggestions = async (address) => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/maps/get-suggestion`, {
+        params: { address },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      setSuggestions(response.data.suggestions);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleInputChange = (e, type) => {
+    const value = e.target.value;
+    
+    if (type === "Pickup") {
+      setPickup(value);
+    } else {
+      setDropoff(value);
+    }
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout to avoid too many API calls
+    setSearchTimeout(setTimeout(() => {
+      if (value.trim()) {
+        fetchSuggestions(value);
+      } else {
+        setSuggestions([]);
+      }
+    }, 300));
+  };
+
   const handleLocationSelect = (location) => {
-    // Update either pickup or dropoff based on which was last focused
-    console.log("active::", active);
     if (active === "Dropoff") {
       setDropoff(location);
+      // Only show rides panel if both locations are set
+      if (pickup) {
+        setIsRidesPanelVisible(true);
+      }
     } else {
       setPickup(location);
+      // Only show rides panel if both locations are set
+      if (dropoff) {
+        setIsRidesPanelVisible(true);
+      }
     }
-    
-    // Show rides panel
-    setIsRidesPanelVisible(true);
-    // Keep location panel open
+    setSuggestions([]); // Clear suggestions after selection
     setIsPanelExpanded(true);
   };
 
@@ -81,6 +126,13 @@ const Home = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    // Hide rides panel if either pickup or dropoff is cleared
+    if (!pickup || !dropoff) {
+      setIsRidesPanelVisible(false);
+    }
+  }, [pickup, dropoff]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -129,10 +181,10 @@ const Home = () => {
             <div className="flex flex-col space-y-4">
               <input 
                 value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-                onFocus={()=>{
-                    handleInputFocus();
-                    setActive("Pickup");
+                onChange={(e) => handleInputChange(e, "Pickup")}
+                onFocus={() => {
+                  handleInputFocus();
+                  setActive("Pickup");
                 }}
                 type="text" 
                 className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -140,10 +192,10 @@ const Home = () => {
               />
               <input
                 value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                onFocus={()=>{
-                    handleInputFocus();
-                    setActive("Dropoff");
+                onChange={(e) => handleInputChange(e, "Dropoff")}
+                onFocus={() => {
+                  handleInputFocus();
+                  setActive("Dropoff");
                 }}
                 type="text" 
                 className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -155,7 +207,10 @@ const Home = () => {
           {/* Location Panel */}
           {isPanelExpanded && (
             <div className="location-panel bg-white mt-4 flex-grow rounded-lg">
-              <LocationSearchPanel onLocationSelect={handleLocationSelect} />
+              <LocationSearchPanel 
+                suggestions={suggestions} 
+                onLocationSelect={handleLocationSelect}
+              />
             </div>
           )}
         </div>
