@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
+const RidePopUp = ({ isVisible, onIgnore, confirmRide, onTakePassenger, ride }) => {
   // If panel is not visible, don't render anything
   if (!isVisible) return null;
 
@@ -32,7 +32,7 @@ const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
           <span className="text-xl">👤</span>
         </div>
         <div>
-          <h4 className="font-semibold">{rideDetails.passengerName}</h4>
+          <h4 className="font-semibold">{ride?.data?.user?.fullname?.firstname} {ride?.data?.user?.fullname?.lastname}</h4>
           <p className="text-gray-600 text-sm">Ride Request</p>
         </div>
       </div>
@@ -44,7 +44,7 @@ const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
           <span className="mr-3 text-green-600">🟢</span>
           <div>
             <h5 className="font-medium text-sm">Pickup Point</h5>
-            <p className="text-gray-600 text-xs">{rideDetails.pickupPoint}</p>
+            <p className="text-gray-600 text-xs">{ride.data.origin}</p>
           </div>
         </div>
         
@@ -53,7 +53,7 @@ const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
           <span className="mr-3 text-red-600">🔴</span>
           <div>
             <h5 className="font-medium text-sm">Dropoff Point</h5>
-            <p className="text-gray-600 text-xs">{rideDetails.dropoffPoint}</p>
+            <p className="text-gray-600 text-xs">{ride.data.destination}</p>
           </div>
         </div>
         
@@ -76,7 +76,7 @@ const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
           {/* Ride Pay */}
           <div className="bg-purple-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-purple-600 text-xl mb-1">💰</span>
-            <h5 className="text-sm font-bold">{rideDetails.pay}</h5>
+            <h5 className="text-sm font-bold">₹{ride.data.fare}</h5>
             <p className="text-gray-600 text-xs">Earnings</p>
           </div>
         </div>
@@ -92,7 +92,11 @@ const RidePopUp = ({ isVisible, onIgnore, onTakePassenger }) => {
         </button>
         <button 
           className="bg-green-500 text-white py-3 rounded-lg font-medium shadow-md"
-          onClick={onTakePassenger}
+          onClick={() => {
+            onTakePassenger();
+            confirmRide();
+          }
+        }
         >
           Take Passenger
         </button>

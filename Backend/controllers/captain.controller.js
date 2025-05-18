@@ -11,7 +11,7 @@ module.exports.registerCaptain = async (req, res, next) => { // Define the regis
 
     }
 
-    const { fullname, email, password, vehicle } = req.body; // Destructure request body
+    const { fullname, email, password, vehicle, location } = req.body; // Destructure request body
 
     const isCaptainExists = await captainModel.findOne({ email }); // Check if a captain with the provided email already exists
     if (isCaptainExists) { // If a captain with the provided email already exists
@@ -29,6 +29,7 @@ module.exports.registerCaptain = async (req, res, next) => { // Define the regis
         plate: vehicle.plate,
         capacity: vehicle.capacity,
         vehicleType: vehicle.vehicleType,
+        location,
     });
 
     const token = await captain.generateAuthToken(); // Generate an authentication token for the captain

@@ -1,3 +1,4 @@
+const { send } = require('process');
 const rideModel = require('../db/models/ride.model');
 const mapsService = require('./maps.service');
 const crypto = require('crypto');
@@ -56,8 +57,88 @@ module.exports.createRide = async({
         destination,
         otp: getOTP(4), // Generate a 4-digit OTP
         fare: fare[vehicleType],
-        //vehicleType,
+        vehicleType,
     });
 
     return ride; // Return the created ride 
 }
+
+module.exports.confirmRide = async ({
+    rideId, captain
+}) => {
+    if(!rideId) {
+        throw new Error("All fields are required"); // Check if all required fields are provided
+    }
+
+    await rideModel.findOneAndUpdate({
+           _id: rideId },
+        {
+            status: "accepted", // Update the ride status to accepted
+            //otp: otp, // Update the OTP
+            captain: captain._id // Assign the captain to the ride
+        });
+    
+
+    const ride = await rideModel.findOne({_id:rideId}).populate('user').populate('captain').select('+otp'); // Find the ride by ID
+
+    if(!ride) {
+        throw new Error("Ride not found"); // Check if the ride exists
+    }
+
+    // if(ride.otp !== otp) {
+    //     throw new Error("Invalid OTP"); // Check if the OTP is valid
+    // }
+
+   
+
+    return ride; // Return the updated ride
+} // Define the confirmRide function
+
+module.exports.startRide = async ({
+    rideId, otp, captain
+}) => {
+    if(!rideId || !otp) {
+        throw new Error("All fields are required"); // Check if all required fields are provided
+    }
+
+    const ride = await rideModel.findOneAndUpdate({
+        _id: rideId,
+        otp: otp,
+        //status: "accepted",
+        captain: captain._id
+    }, {
+        status: "ongoing" // Update the ride status to started
+    }).populate('user').populate('captain').select('+otp'); // Populate user and captain details
+
+    if(!ride) {
+        throw new Error("Ride not found or invalid OTP"); // Check if the ride exists or OTP is valid
+    }
+
+    
+
+    return ride; // Return the updated ride
+} // Define the startRide function 
+
+module.exports.endRide = async ({   
+    rideId, captain
+}) => {
+    if(!rideId) {
+        throw new Error("All fields are required"); // Check if all required fields are provided
+    }
+
+    const ride = await rideModel.findOneAndUpdate({
+        _id: rideId,
+        status: "ongoing",
+        captain: captain._id
+    }, {
+        status: "completed" // Update the ride status to completed
+    }).populate('user').populate('captain'); // Populate user and captain details
+
+    if(!ride) {
+        throw new Error("Ride not found or invalid OTP"); // Check if the ride exists or OTP is valid
+    }
+
+    
+
+    return ride; // Return the updated ride
+} // Define the endRide function

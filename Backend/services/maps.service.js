@@ -1,4 +1,5 @@
 const axios = require('axios'); // Import Axios for HTTP requests
+const captainModel = require('../db/models/captain.model'); // Import the captain model for database operations
 
 module.exports.getAddressCoordinate = async (address) => {
     try {
@@ -74,5 +75,28 @@ module.exports.getSuggestion = async (address) => {
     } catch (error) {
         console.error('Error fetching suggestions:', error.message);
         throw new Error('Unable to fetch suggestions for the given address');
+    }
+}
+
+module.exports.getCaptainInRadius = async (latitude, longitude, radius) => {
+    if(!latitude || !longitude || !radius){
+        throw new Error('Latitude, longitude, and radius are required'); // Check if latitude, longitude, and radius are provided
+    }
+
+    //radius is in km
+
+    try {
+        const captains = await captainModel.find({
+            location: {
+                $geoWithin: {
+                    $centerSphere: [[longitude, latitude], radius / 6371] // Use the Haversine formula to calculate distance
+                }
+            }
+        });
+
+        return captains; // Return the list of captains within the specified radius
+    } catch (error) {
+        console.error('Error fetching captains in radius:', error.message);
+        throw new Error('Unable to fetch captains in the specified radius');
     }
 }

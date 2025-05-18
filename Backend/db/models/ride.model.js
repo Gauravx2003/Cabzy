@@ -11,6 +11,12 @@ const rideSchema = new mongoose.Schema({
         ref: 'captain',
     },
 
+    vehicleType:{
+        type: String,
+        enum: ['car', 'auto', 'bike'],
+        required: true,
+    },
+
     origin: {
         type: String,
         required: true,

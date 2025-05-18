@@ -11,9 +11,10 @@ import './style.css';
 import UserProtectWrapper from "./pages/UserProtectWrapper";
 import UserLogout from "./pages/UserLogout";
 import CaptainProtectWrapper from "./pages/CaptainProtectWrapper";
-import CapHome from "./pages/CapHome";
+import CapHome from "./pages/capHome";
 import CaptainLogout from "./pages/CaptainLogout";
 import Riding from "./pages/Riding";
+import CaptainRiding from "./pages/CaptainRiding";
 
 const App = () => {
 
@@ -30,11 +31,13 @@ const App = () => {
             <Route path="/captain-signup" element={<CaptainSignup/>} />
             <Route path="/signup" element={<UserSignup/>} />
             <Route path="/riding" element={<Riding />} />
-            <Route path="/captain-home" element={
+            <Route path="/captain-riding" element={<CaptainRiding />} />
+             <Route path="/captain-home" element={
               <CaptainProtectWrapper>
                 <CapHome/>
               </CaptainProtectWrapper>
             } />
+          
             <Route path="/home" element={
               <UserProtectWrapper>
                 <Home/>

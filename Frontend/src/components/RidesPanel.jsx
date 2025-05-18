@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import 'remixicon/fonts/remixicon.css';
 
-const RidesPanel = ({ isVisible, onOutsideClick, onBookRide }) => {
+const RidesPanel = ({ isVisible, onOutsideClick, onBookRide, fare, createRide }) => {
     const [selectedRideIndex, setSelectedRideIndex] = useState(null);
 
     // If panel is not visible, don't render anything
@@ -75,7 +75,15 @@ const RidesPanel = ({ isVisible, onOutsideClick, onBookRide }) => {
                             <h5 className="font-medium text-sm text-gray-600">{ride.time}</h5>
                             <p className="font-normal text-xs text-gray-500">{ride.description}</p>
                         </div>
-                        <h2 className="font-semibold">{ride.price}</h2>
+                        <h2 className="font-semibold">
+                        ₹{fare[
+                              ride.name === "CabzyGo"
+                              ? "car"
+                              : ride.name === "Cabzy Moto"
+                              ? "bike"
+                              : "auto"
+                            ]}
+                        </h2>
                     </div>
                 ))}
             </div>
@@ -84,7 +92,15 @@ const RidesPanel = ({ isVisible, onOutsideClick, onBookRide }) => {
                 <div className="mt-4">
                     <button 
                         className="bg-black text-white w-full py-3 rounded-lg font-medium"
-                        onClick={handleBookRide}
+                        onClick={() => {
+                            handleBookRide();
+                            createRide(rides[selectedRideIndex].name === "CabzyGo"
+                                ? "car"
+                                : rides[selectedRideIndex].name === "Cabzy Moto"
+                                ? "bike"
+                                : "auto"
+                            );
+                        }}
                     >
                         Book {rides[selectedRideIndex].name}
                     </button>

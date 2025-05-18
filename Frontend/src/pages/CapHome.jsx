@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import { SocketContext } from "../context/SocketContext";
+import {CaptainDataContext} from "../context/CaptainContext";
 import { Link } from "react-router-dom";
 import logoUrl from "../assets/images/Captain_logo.jpg";
 import mapUrl from "../assets/images/map.jpg";
 import RidePopUp from "../components/RidePopUp";
 import FinishRide from "../components/FinishRide";
+import axios from "axios";
 import 'remixicon/fonts/remixicon.css';
+
 
 const CapHome = () => {
   // Captain Profile and Earnings State
@@ -17,9 +21,11 @@ const CapHome = () => {
     isOnline: true
   });
 
+  const [ride, setRide] = useState({});
+
   // Ride States
   const [rideState, setRideState] = useState({
-    isRidePopUpVisible: true,
+    isRidePopUpVisible: false,
     isFinishRideVisible: false,
     currentRide: {
       passengerName: "Rahul Kumar",
@@ -30,6 +36,10 @@ const CapHome = () => {
       pay: "₹193"
     }
   });
+
+  const {captain} = useContext(CaptainDataContext);
+  const { socket } = useContext(SocketContext); // Fetch Socket from Context 
+  // Fetch Captain Data from Context
 
   // Handlers for Ride Request
   const handleIgnoreRide = () => {
@@ -77,6 +87,100 @@ const CapHome = () => {
     }));
   };
 
+  async function confirmRide() {
+    if (!ride || !ride.data) {
+      console.error("No ride data available");
+      return;
+    }
+     const response = await axios.post(
+  `${import.meta.env.VITE_BACKEND_URL}/ride/accept-ride`,
+  {
+    rideId: ride.data._id,
+    //otp: ride.data.otp,
+    captain: captain,
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  }
+);
+
+  }
+
+
+  useEffect(() => {
+      if (captain && captain._id && socket) {
+        socket.emit("join", { userId: captain._id, type: "captain" });
+        
+      }
+
+      let locationInterval;
+
+      if (captain && captain._id && socket) {
+        locationInterval = setInterval(() => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                // Emit location to server
+                socket.emit("update-captain-location", {
+                  userId: captain._id,
+                  location: {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  }
+                });
+              },
+              (error) => {
+                // Optionally handle error
+              }
+            );
+          }
+        }, 10000);
+      }
+
+      return () => {
+        if (locationInterval) clearInterval(locationInterval);
+      };
+    }, [captain, socket]); // Runs only when user/socket change
+
+  
+    //console.log(socket.id);
+useEffect(() => {
+  if (!socket) return;
+
+  socket.on("rideRequest", (data) => {
+    console.log("Ride request received via socket:", data);
+    setRide(data);
+  });
+
+  return () => socket.off("rideRequest"); // cleanup to avoid duplicate handlers
+}, [socket]);
+
+
+useEffect(() => {
+  if (ride && ride.data) {
+    console.log("Updated ride:", ride);
+
+    // Show the popup after ride is set
+    setRideState(prev => ({
+      ...prev,
+      isRidePopUpVisible: true
+    }));
+  }
+}, [ride]);
+
+
+
+
+useEffect(() => {
+  if (socket && captain?._id) {
+    socket.emit("join", { userId: captain._id, type: "captain" });
+  }
+}, [socket, captain]);
+
+
+
   // Calculate panel height - for FinishRide, make map take more space
   const panelHeight = rideState.isFinishRideVisible ? "40%" : "45%";
   const mapHeight = rideState.isFinishRideVisible ? "60%" : "55%";
@@ -120,7 +224,7 @@ const CapHome = () => {
             <div className="bg-gray-200 h-12 w-12 rounded-full flex items-center justify-center">
               <span className="text-2xl">👤</span>
             </div>
-            <h4 className="text-lg font-semibold">{captainDetails.name}</h4>
+            <h4 className="text-lg font-semibold">{captain?.fullname?.firstname} {captain?.fullname?.lastname}</h4>
           </div>
           
           <div className="text-right">
@@ -176,6 +280,8 @@ const CapHome = () => {
         }`}
       >
         <RidePopUp 
+          ride={ride}
+          confirmRide={confirmRide}
           isVisible={rideState.isRidePopUpVisible}
           onIgnore={handleIgnoreRide}
           onTakePassenger={handleTakePassenger}
@@ -191,6 +297,7 @@ const CapHome = () => {
         {rideState.isFinishRideVisible && (
           <FinishRide 
             rideDetails={rideState.currentRide}
+            ride={ride}
             onClose={handleCloseFinishRide}
             onFinishRide={handleFinishRide}
           />

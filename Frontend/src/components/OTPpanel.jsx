@@ -1,15 +1,52 @@
 import React, { useState } from "react";
+import axios from "axios";
+import {useNavigate} from "react-router-dom";
 
-const OTPpanel = ({ onVerify }) => {
+const OTPpanel = ({ onVerify, ride }) => {
   const [otp, setOtp] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setOtp(e.target.value);
+    
   };
 
-  const handleVerify = () => {
+  
+
+  const handleVerify = async () => {
     // You can add validation logic here if needed
-    onVerify();
+    //console.log("DATA is: ",ride);
+
+    console.log("otp id is : ", otp);
+
+    try{
+    
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/ride/start-ride`, 
+      {
+        rideId: ride.data._id,
+        otp: otp,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    
+      if(response.status === 200) {
+        console.log("OTP verified successfully:", response.data);
+        //alert("OTP verified successfully");
+        navigate("/captain-riding", {state: {ride: ride}});
+      }
+      // Handle successful OTP verification
+    
+   } catch (error) {
+      console.error("Error verifying OTP:", error.response?.data || error.message);
+      alert(error.response?.data?.error || "An error occurred while verifying OTP.");
+      // Handle error (e.g., show an error message)
+    }
   };
 
   return (

@@ -27,6 +27,7 @@ const CaptainLogin = () => {
                 const data = response.data;
                 setCaptain(data.captain);
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('captain', JSON.stringify(data.captain));
                 navigate('/captain-home');
             }
 

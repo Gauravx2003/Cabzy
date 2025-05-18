@@ -12,7 +12,8 @@ router.post('/register', [  // Define validation rules for the registration rout
     body('vehicle.color').notEmpty().withMessage('Vehicle color is required'), // Validate vehicle color
     body('vehicle.plate').notEmpty().withMessage('Vehicle plate is required'), // Validate vehicle plate
     body('vehicle.capacity').isInt({ min: 1 }).withMessage('Vehicle capacity must be at least 1'), // Validate vehicle capacity
-    body('vehicle.vehicleType').isIn(['car', 'motorcycle', 'auto']).withMessage('Invalid vehicle type'), // Validate vehicle type against allowed values
+    body('vehicle.vehicleType').isIn(['car', 'bike', 'auto']).withMessage('Invalid vehicle type'), // Validate vehicle type against allowed values
+    body('location').notEmpty().withMessage('Location is required'), // Validate vehicle location
 
 ], 
     captainController.registerCaptain // Register route with validation and controller

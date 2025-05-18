@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import OTPpanel from "./OTPpanel";
 
-const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
+const FinishRide = ({ rideDetails, onFinishRide, ride, onClose }) => {
   const [showOTP, setShowOTP] = useState(false);
   const [rideStarted, setRideStarted] = useState(false);
+
+  
 
   const handleEnterOTP = () => {
     setShowOTP(true);
@@ -13,6 +15,8 @@ const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
     setShowOTP(false);
     setRideStarted(true);
   };
+
+  //console.log("Sending DATA:", ride);
 
   return (
     <div className="bg-white rounded-t-3xl shadow-lg p-4 animate-slide-up">
@@ -32,7 +36,7 @@ const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
           <span className="text-xl">👤</span>
         </div>
         <div>
-          <h4 className="font-semibold">{rideDetails.passengerName}</h4>
+          <h4 className="font-semibold">{ride?.data?.user?.fullname?.firstname} {ride?.data?.user?.fullname?.lastname}</h4>
           <p className="text-gray-600 text-sm">
             {rideStarted ? "In Progress" : "Ready to Pick Up"}
           </p>
@@ -51,10 +55,12 @@ const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
               {rideStarted ? "Dropoff Point" : "Pickup Point"}
             </h5>
             <p className="text-gray-600 text-xs">
-              {rideStarted ? rideDetails.dropoffPoint : rideDetails.pickupPoint}
+              {rideStarted ? ride.data.destination : ride.data.origin}
             </p>
           </div>
         </div>
+
+        
 
         {/* Ride Details Grid */}
         <div className={`grid ${rideStarted ? 'grid-cols-2' : 'grid-cols-3'} gap-2`}>
@@ -77,7 +83,7 @@ const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
           {/* Ride Pay */}
           <div className="bg-purple-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-purple-600 text-xl mb-1">💰</span>
-            <h5 className="text-sm font-bold">{rideDetails.pay}</h5>
+            <h5 className="text-sm font-bold">{ride.data.fare}</h5>
             <p className="text-gray-600 text-xs">Earnings</p>
           </div>
         </div>
@@ -93,8 +99,9 @@ const FinishRide = ({ rideDetails, onFinishRide, onClose }) => {
         </button>
       )}
 
+      
       {/* OTP Panel */}
-      {showOTP && <OTPpanel onVerify={handleOTPVerified} />}
+      {showOTP && <OTPpanel ride={ride} onVerify={handleOTPVerified} />}
     </div>
   );
 };

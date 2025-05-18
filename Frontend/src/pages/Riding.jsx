@@ -1,7 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import mp from "../assets/images/map.jpg"; // Map image placeholder
 import 'remixicon/fonts/remixicon.css';
+import { useContext, useEffect } from "react";
+import {SocketContext} from "../context/SocketContext"; 
 
 const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
   // Temporary driver data (will be replaced with real data in the future)
@@ -13,6 +15,29 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
     eta: "5 mins",
     image: "https://randomuser.me/api/portraits/men/32.jpg"
   };
+
+  const location = useLocation();
+  const rideData = location.state?.ride || {};
+  console.log("Ride Data:", rideData);
+
+  const { socket } = useContext(SocketContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("rideEnded", (data) => {
+        console.log("Ride completed:", data);
+        // Handle ride completion logic here
+        navigate("/home");
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("rideCompleted");
+      }
+    };  
+  });
 
   return (
     <div className="h-screen flex flex-col">
@@ -82,7 +107,7 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
           )}
 
           {/* Trip Details Section */}
-          <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-4">
             <div className="flex items-start">
               <div className="text-blue-500 text-xl mt-1 mr-3">
                 <i className="ri-map-pin-fill"></i>
@@ -104,20 +129,10 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 mb-4">
-            <button className="flex-1 flex justify-center items-center py-2 border border-gray-300 rounded-lg">
-              <i className="ri-phone-fill text-blue-500 mr-2"></i>
-              <span>Call</span>
-            </button>
-            <button className="flex-1 flex justify-center items-center py-2 border border-gray-300 rounded-lg">
-              <i className="ri-message-2-line text-blue-500 mr-2"></i>
-              <span>Message</span>
-            </button>
-          </div>
+          
 
           {/* Payment Button */}
-          <div className="mt-4">
+          <div className="flex top-5">
             <button 
               onClick={onMakePayment}
               className="bg-black text-white w-full py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"

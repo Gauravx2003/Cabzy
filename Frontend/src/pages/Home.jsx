@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import logo from "../assets/images/Cabzy_logo.png";
@@ -8,7 +8,12 @@ import { IoMdArrowDropdown } from "react-icons/io";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import RidesPanel from "../components/RidesPanel";
 import LookingForDriver from "../components/LookingForDriver";
+import WaitingForDriver from "../components/WaitingForDriver";
 import 'remixicon/fonts/remixicon.css';
+import {SocketContext} from "../context/SocketContext";
+import { UserDataContext } from "../context/UserContext";   
+import { useNavigate } from "react-router-dom";
+import LiveTracking from "../components/LiveTracking";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -16,14 +21,24 @@ const Home = () => {
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [isRidesPanelVisible, setIsRidesPanelVisible] = useState(false);
   const [isLookingForDriverVisible, setIsLookingForDriverVisible] = useState(false);
+  const [isWaitingForDriverVisible, setIsWaitingForDriverVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedRide, setSelectedRide] = useState(null);
+  const [driverDetails, setDriverDetails] = useState(null);
   const [active, setActive] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [fare, setFare] = useState({});
+  const [acceptedRide, setAcceptedRide] = useState({});
+
+  const { socket } = React.useContext(SocketContext);
+  const {user}= React.useContext(UserDataContext);
+
+  const navigate = useNavigate();
   
   const ridesPanelRef = useRef(null);
   const driverPanelRef = useRef(null);
+  const waitingPanelRef = useRef(null);
   
   const submitHandler = (e) => {
     e.preventDefault();
@@ -33,10 +48,12 @@ const Home = () => {
     setIsPanelExpanded(true);
     setIsRidesPanelVisible(false);
     setIsLookingForDriverVisible(false);
-    ///console.log(active);
+    setIsWaitingForDriverVisible(false);
   };
 
   const handleCollapsePanel = () => {
+    setPickup("");
+    setDropoff("");
     setIsPanelExpanded(false);
   };
 
@@ -54,6 +71,29 @@ const Home = () => {
       setSuggestions([]);
     }
   };
+
+ async function createRide(vehicleType) {
+    try { 
+        console.log(pickup);
+        console.log(dropoff);
+        console.log(vehicleType);   
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/ride/create-ride`, {
+            origin: pickup,
+            destination: dropoff,
+            vehicleType
+            
+        }, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
+        console.log(response.data); 
+        return response.data;
+    } catch (error) {
+        console.error('Error creating ride:', error);
+        throw error;
+    }
+ }
 
   const handleInputChange = (e, type) => {
     const value = e.target.value;
@@ -79,7 +119,7 @@ const Home = () => {
     }, 300));
   };
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = async (location) => {
     if (active === "Dropoff") {
       setDropoff(location);
       // Only show rides panel if both locations are set
@@ -95,6 +135,20 @@ const Home = () => {
     }
     setSuggestions([]); // Clear suggestions after selection
     setIsPanelExpanded(true);
+
+     // Safely assign origin and destination
+  const origin = active === "Dropoff" ? pickup : location;
+  const destination = active === "Dropoff" ? location : dropoff;
+
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/ride/get-fare`, {
+        params: { origin, destination},
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+    console.log(response.data);
+    setFare(response.data);
   };
 
   const handleBookRide = (ride) => {
@@ -105,7 +159,14 @@ const Home = () => {
 
   const handleCancelRide = () => {
     setIsLookingForDriverVisible(false);
+    setIsWaitingForDriverVisible(false);
     setIsRidesPanelVisible(true);
+  };
+
+  const handleDriverFound = (driverData) => {
+    setDriverDetails(driverData);
+    setIsLookingForDriverVisible(false);
+    setIsWaitingForDriverVisible(true);
   };
 
   const handleClickOutside = (event) => {
@@ -115,8 +176,8 @@ const Home = () => {
       setIsRidesPanelVisible(false);
     }
     
-    // We don't want to close the driver panel when clicking outside
-    // as it's an active process
+    // We don't want to close the driver panels when clicking outside
+    // as they're part of an active process
   };
 
   useEffect(() => {
@@ -134,6 +195,50 @@ const Home = () => {
     }
   }, [pickup, dropoff]);
 
+  useEffect(() => {
+    if (user && user._id && socket) {
+      socket.emit("join", { userId: user._id, type: "user" });
+    }
+  }, [user, socket]); // Runs only when user/socket change
+
+  useEffect(() => {
+    if(socket){
+      socket.on("rideAccepted", (data) => {
+        console.log("Ride accepted:", data);
+        setAcceptedRide(data);
+        // When a ride is accepted via socket, transition to WaitingForDriver
+        setIsWaitingForDriverVisible(true);
+        setIsLookingForDriverVisible(false);
+        
+        
+      });
+    }
+    return () => {
+      if(socket) {
+        socket.off("rideAccepted");
+      }
+    };
+  }, [socket, selectedRide]);
+
+useEffect(() => {
+    if(socket){
+      socket.on("rideStarted", (data) => {
+        console.log("Ride started:", data);
+        setAcceptedRide(data);
+        // When a ride is accepted via socket, transition to WaitingForDriver
+        setIsWaitingForDriverVisible(true);
+        setIsLookingForDriverVisible(false);
+        navigate("/riding", {state: {ride: data}});
+      });
+    }
+    return () => {
+      if(socket) {
+        socket.off("rideStarted");
+      }
+    };
+  }, [socket, selectedRide]);
+ 
+
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Map Background */}
@@ -142,7 +247,7 @@ const Home = () => {
         <div className="bg-white rounded-full p-3 left-2 top-2 shadow-lg absolute z-10">
           <img className="w-16 h-16 object-contain rounded" src={logo} alt="logo" />
         </div>
-        <img className="h-full w-full object-cover" src={mp} alt="map_image" />
+        <LiveTracking/>
       </div>
       
       {/* Panel Container */}
@@ -222,7 +327,9 @@ const Home = () => {
             isRidesPanelVisible ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
-          <RidesPanel 
+          <RidesPanel
+            fare={fare}
+            createRide={createRide} 
             isVisible={isRidesPanelVisible} 
             onOutsideClick={() => setIsRidesPanelVisible(false)}
             onBookRide={handleBookRide}
@@ -242,6 +349,24 @@ const Home = () => {
             selectedRide={selectedRide}
             pickup={pickup}
             dropoff={dropoff}
+            onDriverFound={handleDriverFound}
+          />
+        </div>
+
+        {/* Waiting For Driver Panel */}
+        <div 
+          ref={waitingPanelRef}
+          className={`fixed bottom-0 left-0 right-0 z-30 transition-transform duration-300 ${
+            isWaitingForDriverVisible ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
+          <WaitingForDriver 
+            isVisible={isWaitingForDriverVisible}
+            acceptedRide={acceptedRide}
+            driverDetails={driverDetails}
+            pickup={pickup}
+            dropoff={dropoff}
+            onClose={handleCancelRide}
           />
         </div>
       </div>

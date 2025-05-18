@@ -55,20 +55,28 @@ const captainSchema = new mongoose.Schema({
         },
         vehicleType: {
             type: String,
-            enum: ['car', 'motorcycle', 'auto'],
+            enum: ['car', 'bike', 'auto'],
             required: true,
         },
      },
 
-     location: {
-        latitude: {
-            type: Number,
+    location: {
+        type: {
+               type: String,
+               enum: ['Point'],
+               required: true,
+               default: 'Point'
         },
-        longitude: {
-            type: Number,
-        },
-     }
+        coordinates: {
+               type: [Number], // [longitude, latitude]
+               required: true
+      }
+  }
+
     });
+
+    captainSchema.index({ location: "2dsphere" });
+
 
     captainSchema.methods.generateAuthToken = async function () {   
         const captain = this; // Reference to the current captain document

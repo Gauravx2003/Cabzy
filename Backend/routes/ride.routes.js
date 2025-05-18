@@ -20,4 +20,27 @@ router.get('/get-fare', [
     rideController.getFare // Get fare route with validation and controller
 ])
 
+router.post('/accept-ride', [
+    authMiddleware.captainAuth, // Apply captain authentication middleware
+    body('rideId').notEmpty().withMessage('Ride ID is required'), // Validate ride ID presence
+    
+], 
+    rideController.acceptRide // Accept ride route with validation and controller
+); // Define the route for accepting a ride
+
+router.post('/start-ride',[
+    authMiddleware.captainAuth, // Apply captain authentication middleware
+    body('rideId').notEmpty().withMessage('Ride ID is required'), // Validate ride ID presence
+    body('otp').notEmpty().withMessage('OTP is required'), // Validate OTP presence
+],
+    rideController.startRide // Start ride route with validation and controller
+)
+
+router.post('/end-ride',[
+    authMiddleware.captainAuth, // Apply captain authentication middleware
+    body('rideId').notEmpty().withMessage('Ride ID is required'), // Validate ride ID presence
+],
+    rideController.endRide // End ride route with validation and controller
+)
+
 module.exports = router; // Export the router for use in other files

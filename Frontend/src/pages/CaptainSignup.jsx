@@ -37,7 +37,13 @@ const CaptainSignup = () => {
                 plate: vehiclePlate,
                 capacity: Number(vehicleCapacity),
                 vehicleType: vehicleType
+            },
+
+            location:{
+                type: "Point",
+                coordinates: [73.8567, 18.5204] // Default coordinates
             }
+            
         }
 
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/captains/register`, newCaptain);
@@ -58,7 +64,7 @@ const CaptainSignup = () => {
         setVehicleColor('');
         setVehiclePlate('');
         setVehicleCapacity('');
-        setVehicleType('car');
+        setVehicleType('');
     }
 
     return (
@@ -184,7 +190,7 @@ const CaptainSignup = () => {
                                             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                                         >
                                             <option value="car">Car</option>
-                                            <option value="motorcycle">Motorcycle</option>
+                                            <option value="bike">Motorcycle</option>
                                             <option value="auto">Auto</option>
                                         </select>
                                     </div>  

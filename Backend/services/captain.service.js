@@ -1,7 +1,7 @@
 const captainModel = require('../db/models/captain.model');
 
 const createCaptain = async ({
-    firstname,lastname,email,password, color, plate, capacity, vehicleType, // Destructure the request body to get user details
+    firstname,lastname,email,password, color, plate, capacity, vehicleType, location // Destructure the request body to get user details
 }) => {
     if(!firstname || !lastname || !email || !password || !color || !plate || !capacity || !vehicleType) {
         throw new Error("All fields are required"); // Check if all required fields are provided
@@ -20,6 +20,8 @@ const createCaptain = async ({
             capacity,
             vehicleType,
         },
+
+        location,
     });
 
     return captain; // Return the created captain
