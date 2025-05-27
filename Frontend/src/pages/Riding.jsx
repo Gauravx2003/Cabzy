@@ -1,12 +1,12 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import mp from "../assets/images/map.jpg"; // Map image placeholder
+import mp from "../assets/images/map.jpg";
 import 'remixicon/fonts/remixicon.css';
 import { useContext, useEffect } from "react";
-import {SocketContext} from "../context/SocketContext"; 
+import {SocketContext} from "../context/SocketContext";
+import axios from "axios";
 
-const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
-  // Temporary driver data (will be replaced with real data in the future)
+const Riding = ({ selectedRide, pickup, dropoff }) => {
   const driverInfo = {
     name: "Captain Alex",
     rating: 4.8,
@@ -18,16 +18,85 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
 
   const location = useLocation();
   const rideData = location.state?.ride || {};
-  console.log("Ride Data:", rideData);
-
-  const { socket } = useContext(SocketContext);
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext);
+
+  const initializeRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    const res = await initializeRazorpay();
+    if (!res) {
+      alert("Razorpay SDK failed to load");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/payment/create-order`,
+        { rideId: rideData.data._id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      const options = {
+        key: response.data.key,
+        amount: response.data.amount,
+        currency: response.data.currency,
+        name: "Cabzy",
+        description: "Ride Payment",
+        order_id: response.data.orderId,
+        handler: async (response) => {
+          try {
+            await axios.post(
+              `${import.meta.env.VITE_BACKEND_URL}/payment/verify`,
+              {
+                rideId: rideData.data._id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+              }
+            );
+            alert("Payment successful!");
+            navigate("/home");
+          } catch (error) {
+            alert("Payment verification failed");
+          }
+        },
+        prefill: {
+          email: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email : "",
+        },
+        theme: {
+          color: "#000000",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      alert("Error creating payment order");
+    }
+  };
 
   useEffect(() => {
     if (socket) {
       socket.on("rideEnded", (data) => {
         console.log("Ride completed:", data);
-        // Handle ride completion logic here
         navigate("/home");
       });
     }
@@ -41,17 +110,14 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Home button */}
       <Link to="/home" className="fixed right-2 top-2 z-10 h-10 w-10 bg-white rounded-full flex justify-center items-center shadow-md">
         <i className="ri-home-5-line"></i>
       </Link>
       
-      {/* Map Section - Upper Half */}
       <div className="h-1/2">
         <img className="h-full w-full object-cover" src={mp} alt="map_image" />
       </div>
       
-      {/* Ride Details Section - Lower Half */}
       <div className="h-1/2">
         <div className="bg-white rounded-t-3xl shadow-lg p-4 h-full">
           <div className="flex justify-between items-center mb-4">
@@ -61,7 +127,6 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
             </div>
           </div>
 
-          {/* Driver Details Section */}
           <div className="flex items-center border border-gray-200 rounded-xl p-3 mb-4">
             <div className="relative">
               <img 
@@ -88,7 +153,6 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
             </div>
           </div>
 
-          {/* Ride Details Section */}
           {selectedRide && (
             <div className="flex items-center border border-gray-200 rounded-xl p-3 mb-4">
               <img 
@@ -106,7 +170,6 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
             </div>
           )}
 
-          {/* Trip Details Section */}
           <div className="space-y-4 mb-4">
             <div className="flex items-start">
               <div className="text-blue-500 text-xl mt-1 mr-3">
@@ -129,15 +192,12 @@ const Riding = ({ selectedRide, pickup, dropoff, onMakePayment }) => {
             </div>
           </div>
 
-          
-
-          {/* Payment Button */}
           <div className="flex top-5">
             <button 
-              onClick={onMakePayment}
+              onClick={handlePayment}
               className="bg-black text-white w-full py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
-              Make Payment
+              Pay ₹{rideData.data?.fare || "0"}
             </button>
           </div>
         </div>

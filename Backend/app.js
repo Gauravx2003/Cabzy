@@ -1,31 +1,29 @@
 const dotenv = require("dotenv");
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 const express = require("express");
 const app = express();
 
-const cookieParser = require('cookie-parser'); // Import cookie parser middleware
+const cookieParser = require('cookie-parser');
+const cors = require("cors");
+app.use(cors());
 
+const connectDB = require('./db/db');
+connectDB();
 
-const cors = require("cors"); // Import CORS middleware
-app.use(cors()); // Use CORS middleware to allow cross-origin requests
+const userRoutes = require("./routes/user.routes");
+const captainRoutes = require("./routes/captain.routes");
+const mapsRoutes = require("./routes/maps.routes");
+const rideRoutes = require("./routes/ride.routes");
+const paymentRoutes = require("./routes/payment.routes");
 
-const connectDB = require('./db/db'); // Import the database connection function
-connectDB(); // Connect to the database
-
-const userRoutes = require("./routes/user.routes"); // Import user routes
-const captainRoutes = require("./routes/captain.routes"); // Import captain routes
-const mapsRoutes = require("./routes/maps.routes"); // Import maps routes
-const rideRoutes = require("./routes/ride.routes"); // Import ride routes
-
-app.use(cookieParser()); // 🔥 This line enables reading cookies from requests
-app.use(express.json()); // Parse incoming JSON requests
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded requests
-app.use("/users", userRoutes); // Use user routes for API requests
-app.use("/captains", captainRoutes); // Use captain routes for API requests
-app.use("/maps", mapsRoutes); // Use maps routes for API requests
-app.use("/ride", rideRoutes); // Use ride routes for API requests
-
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/users", userRoutes);
+app.use("/captains", captainRoutes);
+app.use("/maps", mapsRoutes);
+app.use("/ride", rideRoutes);
+app.use("/payment", paymentRoutes);
 
 module.exports = app;
-// This is a simple Express server that responds with "Hello World!" when the root URL is accessed.
