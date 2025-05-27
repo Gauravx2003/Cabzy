@@ -72,6 +72,13 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
                 }
               }
             );
+            
+            // Emit payment completion event to captain
+            socket.emit("paymentComplete", {
+              rideId: rideData.data._id,
+              captainId: rideData.data.captain._id
+            });
+            
             alert("Payment successful!");
             navigate("/home");
           } catch (error) {
@@ -103,10 +110,10 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
 
     return () => {
       if (socket) {
-        socket.off("rideCompleted");
+        socket.off("rideEnded");
       }
     };  
-  });
+  }, [socket, navigate]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -177,7 +184,7 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
               </div>
               <div>
                 <p className="text-xs text-gray-500">PICKUP</p>
-                <p className="text-sm font-medium">{pickup || "123 Main Street, Downtown"}</p>
+                <p className="text-sm font-medium">{rideData?.data?.origin || "Loading..."}</p>
               </div>
             </div>
 
@@ -187,7 +194,7 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
               </div>
               <div>
                 <p className="text-xs text-gray-500">DROPOFF</p>
-                <p className="text-sm font-medium">{dropoff || "456 Park Avenue, Uptown"}</p>
+                <p className="text-sm font-medium">{rideData?.data?.destination || "Loading..."}</p>
               </div>
             </div>
           </div>
