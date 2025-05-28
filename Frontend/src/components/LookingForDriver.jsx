@@ -7,10 +7,16 @@ const LookingForDriver = ({
   selectedRide, 
   pickup, 
   dropoff,
+  fare,
   onDriverFound
 }) => {
+
+  if (!isVisible) return null;
+
   const [loadingDots, setLoadingDots] = useState("");
   const [driverFound, setDriverFound] = useState(false);
+
+  
   
   // Loading animation effect
   useEffect(() => {
@@ -61,9 +67,10 @@ const LookingForDriver = ({
 
   return (
     <div className="bg-white rounded-t-3xl shadow-lg p-4 animate-slide-up">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold text-lg">
-          {driverFound ? "Captain Found" : `Looking for Driver${loadingDots}`}
+          {driverFound ? "Captain Found!" : `Looking for Driver${loadingDots}`}
         </h3>
         <div 
           className="bg-gray-100 p-1 rounded-full cursor-pointer"
@@ -83,33 +90,37 @@ const LookingForDriver = ({
           />
           <div className="ml-3">
             <h4 className="font-medium text-sm">
-              {selectedRide.name} <span className="ml-1"><i className="ri-user-fill"></i>{selectedRide.capacity}</span>
+              {selectedRide.name} <span className="ml-1">👤{selectedRide.capacity}</span>
             </h4>
             <p className="font-normal text-xs text-gray-500">{selectedRide.description}</p>
           </div>
-          <h2 className="font-semibold ml-auto">{selectedRide.price}</h2>
+          <h2 className="font-semibold ml-auto">💰{fare[
+                              selectedRide.name === "CabzyGo"
+                              ? "car"
+                              : selectedRide.name === "Cabzy Moto"
+                              ? "bike"
+                              : "auto"
+                            ]}</h2>
         </div>
       )}
 
       {/* Trip Details Section */}
-      <div className="space-y-4 mb-6">
-        <div className="flex items-start">
-          <div className="text-blue-500 text-xl mt-1 mr-3">
-            <i className="ri-map-pin-fill"></i>
-          </div>
+      <div className="space-y-3 mb-4">
+        {/* Pickup Point */}
+        <div className="flex items-center">
+          <span className="mr-3 text-green-600">🟢</span>
           <div>
-            <p className="text-xs text-gray-500">PICKUP</p>
-            <p className="text-sm font-medium">{pickup || "No pickup location selected"}</p>
+            <h5 className="font-medium text-sm">Pickup Point</h5>
+            <p className="text-gray-600 text-xs">{pickup || "No pickup location selected"}</p>
           </div>
         </div>
-
-        <div className="flex items-start">
-          <div className="text-blue-500 text-xl mt-1 mr-3">
-            <i className="ri-map-pin-line"></i>
-          </div>
+        
+        {/* Dropoff Point */}
+        <div className="flex items-center">
+          <span className="mr-3 text-red-600">🔴</span>
           <div>
-            <p className="text-xs text-gray-500">DROPOFF</p>
-            <p className="text-sm font-medium">{dropoff || "No dropoff location selected"}</p>
+            <h5 className="font-medium text-sm">Dropoff Point</h5>
+            <p className="text-gray-600 text-xs">{dropoff || "No dropoff location selected"}</p>
           </div>
         </div>
       </div>
@@ -118,18 +129,18 @@ const LookingForDriver = ({
       <div className="flex flex-col items-center justify-center py-6">
         {driverFound ? (
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl animate-scale-in">
-              <i className="ri-check-line"></i>
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-3xl animate-scale-in">
+              ✅
             </div>
             <p className="text-center text-gray-700 font-medium mt-4">
-              Driver found! Preparing details...
+              Captain found! Preparing details...
             </p>
           </div>
         ) : (
           <>
             <div className="w-16 h-16 border-4 border-t-blue-500 border-r-blue-300 border-b-blue-200 border-l-blue-400 rounded-full animate-spin mb-4"></div>
             <p className="text-center text-gray-700 font-medium">
-              Connecting you with a nearby driver
+              🔍 Connecting you with a nearby captain
             </p>
             <p className="text-center text-gray-500 text-sm mt-1">
               This may take a few moments
@@ -143,7 +154,7 @@ const LookingForDriver = ({
         <div className="mt-4">
           <button 
             onClick={onCancelRide}
-            className="bg-white text-black border border-gray-300 w-full py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            className="bg-red-500 text-white w-full py-3 rounded-lg font-medium shadow-md hover:bg-red-600 transition-colors"
           >
             Cancel Ride
           </button>

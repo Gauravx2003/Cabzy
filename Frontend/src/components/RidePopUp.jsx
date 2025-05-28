@@ -1,8 +1,93 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const RidePopUp = ({ isVisible, onIgnore, confirmRide, onTakePassenger, ride }) => {
+const RidePopUp = ({ isVisible, onIgnore, confirmRide, onTakePassenger, distance, ride }) => {
   // If panel is not visible, don't render anything
   if (!isVisible) return null;
+
+  const [destinationCoord, setDestinationCoord] = React.useState({});
+  const destinationRef = React.useRef({});
+  const [LiveDistance, setLiveDistance] = React.useState({});
+  
+
+  
+   async function LiveUpdation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const pos = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+  
+          console.log("Current position:", pos);
+          console.log("Destination coordinates:", destinationRef.current);
+  
+          try {
+            const response = await axios.post(
+              `${import.meta.env.VITE_BACKEND_URL}/maps/live-location`,
+              {
+                origin: pos,
+                destination: destinationRef.current, // ✅ use ref, not state
+                
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+  
+            
+            if (response.status === 200) {
+              console.log("Live Distance and Time:", response.data);
+              setLiveDistance(response.data.distanceAndTime);
+              // Optionally update state here
+            } else {
+              console.error("Error fetching distance and time:", response.data);
+            }
+          } catch (err) {
+            console.error("Error in live location update:", err);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser");
+    }
+  }
+
+  useEffect(() => {
+    console.log("Ride Data:", ride);
+      axios
+      .get(
+        `${import.meta.env.VITE_BACKEND_URL}/maps/get-coordinates-cap`,
+        {
+          params: { address: ride?.data?.origin },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+        .then((response) => {
+          //console.log("Destination coordinates:", response.data.coordinates);
+          setDestinationCoord(response.data.coordinates);
+          destinationRef.current = response.data.coordinates; // ✅ sync to ref
+
+          LiveUpdation(); // Call the function to update live distance
+        })
+        .catch((error) => {
+          console.error("Error fetching destination coordinates:", error);
+        });
+    }, []);
+
+
+
+console.log("Live Distance in Ride POP UP:", LiveDistance);
+
+
 
   const rideDetails = {
     passengerName: "Rahul Kumar",
@@ -62,14 +147,14 @@ const RidePopUp = ({ isVisible, onIgnore, confirmRide, onTakePassenger, ride }) 
           {/* Distance from Passenger */}
           <div className="bg-blue-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-blue-600 text-xl mb-1">📍</span>
-            <h5 className="text-sm font-bold">{rideDetails.distanceFromPassenger}</h5>
+            <h5 className="text-sm font-bold">{LiveDistance.distance}</h5>
             <p className="text-gray-600 text-xs">From You</p>
           </div>
           
           {/* Ride Distance */}
           <div className="bg-green-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-green-600 text-xl mb-1">🚗</span>
-            <h5 className="text-sm font-bold">{rideDetails.rideDistance}</h5>
+            <h5 className="text-sm font-bold">{parseFloat(distance?.distanceAndTime?.distance)} KM</h5>
             <p className="text-gray-600 text-xs">Ride Dist</p>
           </div>
           

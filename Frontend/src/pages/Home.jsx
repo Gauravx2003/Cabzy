@@ -125,12 +125,14 @@ const Home = () => {
       // Only show rides panel if both locations are set
       if (pickup) {
         setIsRidesPanelVisible(true);
+        setIsPanelExpanded(false);
       }
     } else {
       setPickup(location);
       // Only show rides panel if both locations are set
       if (dropoff) {
         setIsRidesPanelVisible(true);
+        setIsPanelExpanded(false);
       }
     }
     setSuggestions([]); // Clear suggestions after selection
@@ -180,6 +182,28 @@ const Home = () => {
     // as they're part of an active process
   };
 
+  const handleOtherCap = async()=>{
+     try { 
+        console.log(pickup);
+        console.log(dropoff);
+        //console.log(vehicleType);   
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/ride/ride-found`, {
+            origin: pickup,
+            destination: dropoff,
+            
+        }, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        });
+        console.log(response.data); 
+        return response.data;
+    } catch (error) {
+        console.error('Error creating ride:', error);
+        throw error;
+    }
+  }
+
   useEffect(() => {
     // Add click event listener to detect clicks outside the rides panel
     document.addEventListener("mousedown", handleClickOutside);
@@ -209,6 +233,7 @@ const Home = () => {
         // When a ride is accepted via socket, transition to WaitingForDriver
         setIsWaitingForDriverVisible(true);
         setIsLookingForDriverVisible(false);
+        handleOtherCap();
         
         
       });
@@ -253,7 +278,7 @@ useEffect(() => {
       {/* Panel Container */}
       <div 
         className={`absolute w-full h-full transition-all duration-400 ease-in-out ${
-          isPanelExpanded ? "bottom-0" : "bottom-[-70%]"
+          isPanelExpanded ? "bottom-0" : "bottom-[-66%]"
         }`}
       >
         {/* Dropdown arrow - only visible when panel is expanded */}
@@ -280,38 +305,54 @@ useEffect(() => {
         )}
         
         {/* White Panel */}
-        <div className="bg-white h-full p-4 rounded-t-3xl shadow-lg">
-          <h4 className="text-xl font-semibold mb-4">Find a Trip</h4>
-          <form onSubmit={submitHandler}>
-            <div className="flex flex-col space-y-4">
-              <input 
-                value={pickup}
-                onChange={(e) => handleInputChange(e, "Pickup")}
-                onFocus={() => {
-                  handleInputFocus();
-                  setActive("Pickup");
-                }}
-                type="text" 
-                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="📍Add Pickup" 
-              />
-              <input
-                value={dropoff}
-                onChange={(e) => handleInputChange(e, "Dropoff")}
-                onFocus={() => {
-                  handleInputFocus();
-                  setActive("Dropoff");
-                }}
-                type="text" 
-                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="📍Add Dropoff" 
-              />
-            </div>
-          </form>
+        <div className="bg-white h-full p-4  rounded-t-3xl shadow-lg">
+          {/* Find Trip Section - Now with border */}
+          <div className="border-2 border-gray-200 rounded-xl p-4 mb-4 shadow-sm bg-white">
+            <h4 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span className="text-blue-600 text-2xl">🚗</span>
+              Find a Trip
+            </h4>
+            <form onSubmit={submitHandler}>
+              <div className="flex flex-col space-y-4">
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                    <i className="ri-map-pin-fill text-lg"></i>
+                  </div>
+                  <input 
+                    value={pickup}
+                    onChange={(e) => handleInputChange(e, "Pickup")}
+                    onFocus={() => {
+                      handleInputFocus();
+                      setActive("Pickup");
+                    }}
+                    type="text" 
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    placeholder="Add Pickup Location" 
+                  />
+                </div>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-600">
+                    <i className="ri-map-pin-fill text-lg"></i>
+                  </div>
+                  <input
+                    value={dropoff}
+                    onChange={(e) => handleInputChange(e, "Dropoff")}
+                    onFocus={() => {
+                      handleInputFocus();
+                      setActive("Dropoff");
+                    }}
+                    type="text" 
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                    placeholder="Add Destination" 
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
           
           {/* Location Panel */}
           {isPanelExpanded && (
-            <div className="location-panel bg-white mt-4 flex-grow rounded-lg">
+            <div className="location-panel bg-white flex-grow rounded-lg">
               <LocationSearchPanel 
                 suggestions={suggestions} 
                 onLocationSelect={handleLocationSelect}
@@ -349,6 +390,7 @@ useEffect(() => {
             selectedRide={selectedRide}
             pickup={pickup}
             dropoff={dropoff}
+            fare={fare}
             onDriverFound={handleDriverFound}
           />
         </div>

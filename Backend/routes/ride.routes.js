@@ -13,12 +13,22 @@ router.post('/create-ride', [ // Define validation rules for the create ride rou
     rideController.createRide // Create ride route with validation and controller
 ); // Define the route for creating a ride
 
+router.post('/ride-found',[
+    authMiddleware.userAuth,
+    body('origin').notEmpty().withMessage('Origin is required'), // Validate origin presence
+    body('destination').notEmpty().withMessage('Destination is required'), // Validate destination presence
+],
+    rideController.rideFound // Create ride route with validation and controller
+);
+
 router.get('/get-fare', [
     authMiddleware.userAuth, // Apply user authentication middleware
     query('origin').notEmpty().withMessage('Origin is required'), // Validate origin presence
     query('destination').notEmpty().withMessage('Destination is required'), // Validate destination presence
     rideController.getFare // Get fare route with validation and controller
 ])
+
+
 
 router.post('/accept-ride', [
     authMiddleware.captainAuth, // Apply captain authentication middleware
@@ -39,6 +49,8 @@ router.post('/start-ride',[
 router.post('/end-ride',[
     authMiddleware.captainAuth, // Apply captain authentication middleware
     body('rideId').notEmpty().withMessage('Ride ID is required'), // Validate ride ID presence
+    body('fare').notEmpty().withMessage('Fare is required'), // Validate fare presence
+    body('distance').notEmpty().withMessage('Distance is required'), // Validate distance presence
 ],
     rideController.endRide // End ride route with validation and controller
 )

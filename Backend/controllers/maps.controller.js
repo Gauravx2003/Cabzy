@@ -40,6 +40,25 @@ module.exports.getDistanceAndTime = async (req, res, next) => {
 
 }
 
+module.exports.liveLocation = async (req, res, next) => {
+    try{
+        const errors = validationResult(req); // Validate the request
+        if(!errors.isEmpty()) { // Check if there are validation errors
+            return res.status(422).json({errors: errors.array()}); // Return validation errors
+        }
+
+        const { origin, destination } = req.body; // Extract origin and destination from the request query parameters
+
+        
+        const distanceAndTime = await mapsService.LiveLocation(origin, destination); // Call the service to get distance and time
+
+        res.status(200).json({distanceAndTime}); // Return the distance and time in the response
+    }catch(error){
+        console.error('Error fetching live location:', error.message); // Log the error message
+        return res.status(500).json({error: 'Unable to fetch live location for the given locations'}); // Return an error response
+    }
+}
+
 module.exports.getSuggestion = async (req, res, next) => {
     try{
         const errors = validationResult(req); // Validate the request

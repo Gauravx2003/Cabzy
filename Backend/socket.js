@@ -59,7 +59,7 @@ const initializeSocket = (server) => {
                 coordinates: [location.longitude, location.latitude], // IMPORTANT: GeoJSON = [lng, lat]
             };
 
-           // console.log(`Captain ${userId} updated location to:`, geoLocation);
+           console.log(`Captain ${userId} updated location to:`, geoLocation);
 
             try {
                 await captainModel.findByIdAndUpdate(userId, {

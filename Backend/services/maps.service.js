@@ -55,6 +55,40 @@ module.exports.getDistanceAndTime = async (origin, destination) => {
     }
 }
 
+module.exports.LiveLocation = async (originCoords, destinationCoords) => {
+    if (!originCoords || !destinationCoords) {
+        throw new Error('Origin coordinates and destination address are required');
+    }
+
+    console.log("Origin Coords:", originCoords);
+    console.log("Destination Coords:", destinationCoords);
+
+
+    const R = 6371e3; // Earth radius in meters
+    const toRad = deg => deg * Math.PI / 180;
+
+    const lat1 = toRad(originCoords.latitude);
+    const lat2 = toRad(destinationCoords.latitude);
+    const dLat = lat2 - lat1;
+    const dLon = toRad(destinationCoords.longitude - originCoords.longitude); // ✅ FIXED HERE
+
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // in meters
+
+    const averageSpeedKmph = 30;
+    const durationHours = (distance / 1000) / averageSpeedKmph;
+    const durationMinutes = durationHours * 60;
+
+    return {
+        distance: `${(distance / 1000).toFixed(1)} km`,
+        duration: `${Math.round(durationMinutes)} mins`
+    };
+};
+
+
 module.exports.getSuggestion = async (address) => {
     if(!address){
         throw new Error('Address is required'); // Check if address is provided

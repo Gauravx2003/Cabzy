@@ -2,6 +2,7 @@ const { send } = require('process');
 const rideModel = require('../db/models/ride.model');
 const mapsService = require('./maps.service');
 const crypto = require('crypto');
+const captainModel = require('../db/models/captain.model'); // Import the captain model
 
 async function getFare(origin, destination) {
     if(!origin || !destination) {
@@ -23,9 +24,9 @@ async function getFare(origin, destination) {
     };
 
     const fares = {
-        bike: baseFare.bike + (parseFloat(distanceAndTime.distance) * ratePerKm.bike),
-        auto: baseFare.auto + (parseFloat(distanceAndTime.distance) * ratePerKm.auto),
-        car: baseFare.car + (parseFloat(distanceAndTime.distance) * ratePerKm.car)
+        bike: parseFloat((baseFare.bike + parseFloat(distanceAndTime.distance) * ratePerKm.bike).toFixed(2)),
+        auto: parseFloat((baseFare.auto + parseFloat(distanceAndTime.distance) * ratePerKm.auto).toFixed(2)),
+        car: parseFloat((baseFare.car + parseFloat(distanceAndTime.distance) * ratePerKm.car).toFixed(2))
     };
 
     return fares;
@@ -54,6 +55,7 @@ module.exports.createRide = async({
     const ride = await rideModel.create({ // Create a new ride in the database
         user,
         origin,
+
         destination,
         otp: getOTP(4), // Generate a 4-digit OTP
         fare: fare[vehicleType],
@@ -120,11 +122,24 @@ module.exports.startRide = async ({
 } // Define the startRide function 
 
 module.exports.endRide = async ({   
-    rideId, captain
+    rideId, captain, fare, distance
 }) => {
     if(!rideId) {
         throw new Error("All fields are required"); // Check if all required fields are provided
     }
+
+    // Update captain stats
+    await captainModel.findByIdAndUpdate(
+      captain._id,
+      {
+        $inc: {
+          totalRides: 1,
+          totalEarnings: fare,
+          totalDistance: parseFloat(distance.toFixed(1))
+        }
+      },
+      { new: true }
+    );
 
     const ride = await rideModel.findOneAndUpdate({
         _id: rideId,
@@ -133,6 +148,8 @@ module.exports.endRide = async ({
     }, {
         status: "completed" // Update the ride status to completed
     }).populate('user').populate('captain'); // Populate user and captain details
+
+    
 
     if(!ride) {
         throw new Error("Ride not found or invalid OTP"); // Check if the ride exists or OTP is valid

@@ -28,7 +28,7 @@ module.exports.createRide = async (req, res) => {
         
         ride.otp="";
 
-        const rideUser = await rideModel.findOne({_id:ride._id}).populate('user'); // Find the ride user by ID and populate the user field
+        const rideUser = await rideModel.findOne({_id:ride._id}).populate('user').populate('captain'); // Find the ride user by ID and populate the user field
         
         //console.log(captainInRadius.length); // Log the number of captains in radius
         setTimeout( () => {
@@ -51,6 +51,41 @@ module.exports.createRide = async (req, res) => {
     } catch (error) {
         res.status(400).json({ error: error.message }); // Handle errors and send response
     }
+}
+
+module.exports.rideFound = async (req, res)=>{
+    const errors = validationResult(req); // Validate the request body
+    if (!errors.isEmpty()) { // Check if there are validation errors
+        return res.status(422).json({ errors: errors.array() }); // Return validation errors with status 422
+    }
+
+    const { origin, destination } = req.body; // Destructure request body
+    
+    try{
+    const pickupCoordinates = await mapService.getAddressCoordinate(origin); // Get pickup coordinates using the map service
+    console.log(pickupCoordinates); // Log the pickup coordinates
+    const captainInRadius = await mapService.getCaptainInRadius(pickupCoordinates.latitude, pickupCoordinates.longitude, 500);
+
+     //console.log(captainInRadius.length); // Log the number of captains in radius
+    setTimeout( () => {
+    captainInRadius.map(async (captain) => {
+            const freshCaptain = await captainModel.findById(captain._id);
+            const captainSocketId = freshCaptain?.socketID;
+            //const rideId = ride._id; // Get the ride ID
+            const message = {
+                type: "rideFound",
+                //data: rideUser,
+            };
+
+            console.log("captainInRadius Called"); // Log the captain's socket ID
+            sendMessageToSocketId(captain._id.toString(), "rideFound", message); // Send a message to the captain's socket ID
+        });
+    },1000);
+    res.status(201).json("Captain Found");
+}catch (error) {
+        res.status(400).json({ error: error.message }); // Handle errors and send response
+    }
+
 }
 
 module.exports.getFare = async (req, res) => {
@@ -122,10 +157,10 @@ module.exports.endRide = async (req, res) => {
         return res.status(422).json({ errors: errors.array() }); // Return validation errors with status 422
     }
 
-    const { rideId } = req.body; // Destructure request body
+    const { rideId, fare, distance } = req.body; // Destructure request body
 
     try {
-        const ride = await rideService.endRide({rideId, captain: req.captain}); // Call the endRide function from the ride service
+        const ride = await rideService.endRide({rideId, fare, distance, captain: req.captain}); // Call the endRide function from the ride service
 
         sendMessageToSocketId(ride.user._id.toString(), "rideEnded", {
             type: "rideEnded",

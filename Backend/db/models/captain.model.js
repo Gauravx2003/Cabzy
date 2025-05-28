@@ -71,7 +71,27 @@ const captainSchema = new mongoose.Schema({
                type: [Number], // [longitude, latitude]
                required: true
       }
+  },
+
+  totalEarnings:{
+    type: Number,
+    default: 0,
+    //select: true,
+  },
+
+  totalRides:{
+    type: Number,
+    default: 0,
+    //select: true,
+  },
+
+  totalDistance:{
+    type: Number,
+    default: 0,
+    set: v => Math.round(v * 100) / 100  // Round to 2 decimal places
   }
+
+
 
     });
 

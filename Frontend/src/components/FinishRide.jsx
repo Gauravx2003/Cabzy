@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import OTPpanel from "./OTPpanel";
 
-const FinishRide = ({ rideDetails, onFinishRide, ride, onClose }) => {
+const FinishRide = ({ rideDetails, onFinishRide, distance, ride, onClose }) => {
   const [showOTP, setShowOTP] = useState(false);
   const [rideStarted, setRideStarted] = useState(false);
 
@@ -76,7 +76,7 @@ const FinishRide = ({ rideDetails, onFinishRide, ride, onClose }) => {
           {/* Ride Distance */}
           <div className="bg-green-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-green-600 text-xl mb-1">🚗</span>
-            <h5 className="text-sm font-bold">{rideDetails.rideDistance}</h5>
+            <h5 className="text-sm font-bold">{parseFloat(distance?.distanceAndTime?.distance)} KM</h5>
             <p className="text-gray-600 text-xs">Ride Dist</p>
           </div>
           
@@ -101,7 +101,7 @@ const FinishRide = ({ rideDetails, onFinishRide, ride, onClose }) => {
 
       
       {/* OTP Panel */}
-      {showOTP && <OTPpanel ride={ride} onVerify={handleOTPVerified} />}
+      {showOTP && <OTPpanel ride={ride} distance={distance} onVerify={handleOTPVerified} />}
     </div>
   );
 };

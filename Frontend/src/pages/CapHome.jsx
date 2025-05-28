@@ -10,6 +10,7 @@ import axios from "axios";
 import 'remixicon/fonts/remixicon.css';
 
 
+
 const CapHome = () => {
   // Captain Profile and Earnings State
   const [captainDetails, setCaptainDetails] = useState({
@@ -22,6 +23,9 @@ const CapHome = () => {
   });
 
   const [ride, setRide] = useState({});
+  const [distance, setDistance] = useState({});
+  const [rideCounter, setRideCounter] = useState(0);
+
 
   // Ride States
   const [rideState, setRideState] = useState({
@@ -40,6 +44,8 @@ const CapHome = () => {
   const {captain} = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext); // Fetch Socket from Context 
   // Fetch Captain Data from Context
+
+  console.log("Captain Data:", captain);
 
   // Handlers for Ride Request
   const handleIgnoreRide = () => {
@@ -108,6 +114,39 @@ const CapHome = () => {
 
   }
 
+ async function getDistanceAndTime() {
+  try {
+    if (!ride?.data?.origin || !ride?.data?.destination) {
+      console.error("Origin or destination missing from ride data");
+      return;
+    }
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL}/maps/get-distance-time-cap`,
+      {
+        params: {
+          origin: ride.data.origin,
+          destination: ride.data.destination
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      }
+    );
+
+    if (response.status === 200) {
+      console.log("Distance and time data:", response.data);
+      setDistance(response.data);
+    } else {
+      console.error("Error fetching distance and time:", response.data);
+    }
+  } catch (error) {
+    console.error("Error in getDistanceAndTime:", error);
+  }
+}
+
+    
+
 
   useEffect(() => {
       if (captain && captain._id && socket) {
@@ -123,6 +162,7 @@ const CapHome = () => {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 // Emit location to server
+                
                 socket.emit("update-captain-location", {
                   userId: captain._id,
                   location: {
@@ -130,6 +170,11 @@ const CapHome = () => {
                     longitude: position.coords.longitude,
                   }
                 });
+
+                // console.log("Location updated:", {
+                //   latitude: position.coords.latitude,
+                //   longitude: position.coords.longitude,
+                // });
               },
               (error) => {
                 // Optionally handle error
@@ -151,24 +196,55 @@ useEffect(() => {
 
   socket.on("rideRequest", (data) => {
     console.log("Ride request received via socket:", data);
-    setRide(data);
+    console.log(captain.vehicle.vehicleType, "and" , data.data.vehicleType);
+    
+    if (captain.vehicle.vehicleType == data.data.vehicleType){
+      setRide(data);
+      setRideCounter(prev => prev + 1); // increment the counter
+    }
+
+   console.log("Ride Counter:", rideCounter);
+    
   });
 
   return () => socket.off("rideRequest"); // cleanup to avoid duplicate handlers
 }, [socket]);
 
+useEffect(() => {
+  if (!socket) return;
+
+  socket.on("rideFound", (data) => {
+    console.log("Another Captain Accepted:", data);
+    
+    
+    setRideState(prev => ({
+      ...prev,
+      isRidePopUpVisible: false
+    }));
+
+   //console.log("Ride Counter:", rideCounter);
+    
+  });
+
+  return () => socket.off("rideFound"); // cleanup to avoid duplicate handlers
+}, [socket]);
+
 
 useEffect(() => {
+  console.log("Ride changed:", ride);
   if (ride && ride.data) {
     console.log("Updated ride:", ride);
 
+    getDistanceAndTime();
+
     // Show the popup after ride is set
+    console.log("Updating rideState to show pop-up...");
     setRideState(prev => ({
       ...prev,
       isRidePopUpVisible: true
     }));
   }
-}, [ride]);
+}, [rideCounter]);
 
 
 
@@ -229,7 +305,7 @@ useEffect(() => {
           
           <div className="text-right">
             <h4 className="text-2xl font-bold text-green-600">
-              ₹{captainDetails.todayEarnings}
+              ₹{captain?.totalEarnings}
             </h4>
             <p className="text-gray-600 text-sm">Earned Today</p>
           </div>
@@ -247,14 +323,14 @@ useEffect(() => {
           {/* Distance Travelled */}
           <div className="bg-green-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-green-600 text-xl mb-1">🚀</span>
-            <h5 className="text-xl font-bold">{captainDetails.kmTravelled} KM</h5>
+            <h5 className="text-xl font-bold">{captain.totalDistance} KM</h5>
             <p className="text-gray-600 text-sm">Travelled</p>
           </div>
           
           {/* Rides Completed */}
           <div className="bg-purple-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-purple-600 text-xl mb-1">🏍️</span>
-            <h5 className="text-xl font-bold">{captainDetails.ridesCompleted}</h5>
+            <h5 className="text-xl font-bold">{captain.totalRides}</h5>
             <p className="text-gray-600 text-sm">Rides Completed</p>
           </div>
         </div>
@@ -281,6 +357,7 @@ useEffect(() => {
       >
         <RidePopUp 
           ride={ride}
+          distance={distance}
           confirmRide={confirmRide}
           isVisible={rideState.isRidePopUpVisible}
           onIgnore={handleIgnoreRide}
@@ -297,6 +374,7 @@ useEffect(() => {
         {rideState.isFinishRideVisible && (
           <FinishRide 
             rideDetails={rideState.currentRide}
+            distance={distance}
             ride={ride}
             onClose={handleCloseFinishRide}
             onFinishRide={handleFinishRide}

@@ -1,9 +1,14 @@
-import React from "react";
+import React,{useEffect, useRef, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
+//import { useRef } from "react";
 import mp from "../assets/images/map.jpg"; // Map image placeholder
 import 'remixicon/fonts/remixicon.css';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {CaptainDataContext} from "../context/CaptainContext";
+import { SocketContext } from "../context/SocketContext";
+import PaymentComplete from "../components/PaymentComplete"; // Import the PaymentComplete component
+import LiveDistanceOverlay from "../components/LiveDistanceOverlay";
 
 const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
   // User data for the confirmed ride
@@ -24,10 +29,22 @@ const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
     paymentMethod: "Cash"
   };
 
+  const [destinationCoord, setDestinationCoord] = React.useState({});
+  const destinationRef = React.useRef({});
+  const [LiveDistance, setLiveDistance] = React.useState({});
+  const [isPaymentCompleteVisible, setIsPaymentCompleteVisible] = React.useState(false); // State for payment complete popup
+
+
   const location = useLocation();
   const navigate = useNavigate();
   const rideData= location.state?.ride || {};
+  const distanceData=location.state?.distance || {};
+
+  const { socket } = useContext(SocketContext); // Fetch Socket from Context 
+  //const {captain} = useContext(CaptainDataContext);
+
   console.log("Ride Data:", rideData);
+  console.log("Distance Data:", distanceData);
 
   async function onCompleteRide() {
     try {
@@ -35,6 +52,8 @@ const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
         `${import.meta.env.VITE_BACKEND_URL}/ride/end-ride`,
         {
           rideId: rideData.data._id,
+          fare: rideData.data.fare,
+          distance: parseFloat(distanceData.distanceAndTime.distance),
         },
         {
           headers: {
@@ -51,145 +70,198 @@ const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
       }
     } catch (error) {
       console.error("Error completing ride:", error.response?.data || error.message);
-      alert(error.response?.data?.error || "An error occurred while completing the ride.");
+      alert(error.response.data.error);
     }
   }
+
+  async function LiveUpdation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const pos = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        // console.log("Current position:", pos);
+        // console.log("Destination coordinates:", destinationRef.current);
+
+        try {
+          const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/maps/live-location`,
+            {
+              origin: pos,
+              destination: destinationRef.current, // ✅ use ref, not state
+              
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          
+          if (response.status === 200) {
+            console.log("Live Distance and Time:", response.data);
+            setLiveDistance(response.data.distanceAndTime);
+            // Optionally update state here
+          } else {
+            console.error("Error fetching distance and time:", response.data);
+          }
+        } catch (err) {
+          console.error("Error in live location update:", err);
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+      }
+    );
+  } else {
+    console.error("Geolocation is not supported by this browser");
+  }
+}
+
+ // Handler to close payment complete popup
+  const handleClosePaymentComplete = () => {
+    setIsPaymentCompleteVisible(false);
+  };
+
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    LiveUpdation(); // Call your function every 2 seconds
+  }, 10000);
+
+  return () => clearInterval(interval); // Cleanup on unmount
+}, []); // Empty dependency array means run only once after mount
+  
+useEffect(() => {
+    axios
+      .get(
+        `${import.meta.env.VITE_BACKEND_URL}/maps/get-coordinates-cap`,
+        {
+          params: { address: rideData?.data?.destination },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      .then((response) => {
+        //console.log("Destination coordinates:", response.data.coordinates);
+        setDestinationCoord(response.data.coordinates);
+        destinationRef.current = response.data.coordinates; // ✅ sync to ref
+      })
+      .catch((error) => {
+        console.error("Error fetching destination coordinates:", error);
+      });
+  }, [rideData.data.destination]);
+
+
+useEffect(() => {
+if(socket){
+  socket.on("paymentComplete", (data) => {
+     setIsPaymentCompleteVisible(true);
+  });
+}
+return () => {
+      if(socket) {
+        socket.off("paymentComplete");
+      }
+    };
+},[]);
+
+
   
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header with trip status */}
-      <div className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
+    <div className="relative h-screen w-full overflow-hidden bg-gray-50">
+      {/* Header Section */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex justify-between p-4">
+        <div className="bg-white rounded-full px-4 py-2 shadow-lg flex items-center">
           <div className="bg-green-500 h-3 w-3 rounded-full mr-3"></div>
           <span className="font-semibold text-gray-800">Trip in Progress</span>
         </div>
-        <Link to="/captain-home" className="h-10 w-10 bg-gray-100 rounded-full flex justify-center items-center">
-          <i className="ri-close-line text-gray-600"></i>
+        
+        <Link to="/captain-home" className="h-12 w-12 bg-white rounded-full flex justify-center items-center shadow-lg">
+          <i className="ri-close-line text-xl text-gray-600"></i>
         </Link>
       </div>
 
-      {/* Map Section */}
-      <div className="h-2/5 relative">
-        <img className="h-full w-full object-cover" src={mp} alt="map_image" />
-        
-        {/* Trip info overlay */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="bg-white rounded-lg shadow-lg p-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <i className="ri-navigation-line text-blue-500 text-lg mr-2"></i>
-                <span className="font-medium">{tripDetails.distance}</span>
-                <span className="text-gray-500 ml-1">• {tripDetails.duration}</span>
-              </div>
-              <button className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm">
-                Navigate
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LiveDistanceOverlay
+        LiveDistance={LiveDistance}
+      />
       
       {/* Trip Details Section */}
-      <div className="flex-1 bg-white">
+      <div className="h-1/2 bg-white rounded-t-3xl shadow-lg">
         <div className="p-4">
           {/* Passenger Info */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-lg">Passenger Details</h3>
-              <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-                OTP: {userInfo.otp}
-              </div>
-            </div>
+          <div className="bg-gray-50 rounded-xl p-2 mb-4">
+            {/* <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg text-gray-800">Passenger Details</h3>
+              
+            </div> */}
             
             <div className="flex items-center">
-              <img 
-                className="h-12 w-12 rounded-full object-cover" 
-                src={userInfo.image} 
-                alt="Passenger" 
-              />
-              <div className="ml-3 flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">{userInfo.name}</h4>
-                  <div className="flex items-center">
-                    
-                  </div>
-                </div>
-                <p className="text-gray-600 text-sm">{userInfo.phone}</p>
+              <div className="bg-gray-200 h-12 w-12 rounded-full flex items-center justify-center mr-4">
+                <span className="text-xl">👤</span>
               </div>
-              
+              <div className="flex-1">
+                <h4 className="font-semibold text-base">{rideData?.data?.user?.fullname?.firstname} {rideData?.data?.user?.fullname?.lastname}</h4>
+                <p className="text-gray-600 text-sm">Passenger</p>
+              </div>
             </div>
           </div>
 
-          {/* Trip Summary */}
-          <div className="border border-gray-200 rounded-lg p-4 mb-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="font-medium">Trip Summary</span>
-              <span className="text-gray-500 text-sm">{tripDetails.rideType}</span>
+          {/* Trip Summary Grid */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="bg-blue-50 rounded-xl p-2 flex flex-col items-center justify-center">
+              <span className="text-blue-600 text-2xl mb-2">📍</span>
+              <p className="text-xs text-gray-500 font-medium">DISTANCE</p>
+              <p className="font-bold text-sm">{distanceData.distanceAndTime?.distance}</p>
             </div>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-blue-500 text-xl mb-1">
-                  <i className="ri-route-line"></i>
-                </div>
-                <p className="text-xs text-gray-500">Distance</p>
-                <p className="font-semibold">{tripDetails.distance}</p>
-              </div>
-              <div>
-                <div className="text-blue-500 text-xl mb-1">
-                  <i className="ri-time-line"></i>
-                </div>
-                <p className="text-xs text-gray-500">Duration</p>
-                <p className="font-semibold">{tripDetails.duration}</p>
-              </div>
-              <div>
-                <div className="text-green-500 text-xl mb-1">
-                  <i className="ri-money-rupee-circle-line"></i>
-                </div>
-                <p className="text-xs text-gray-500">Fare</p>
-                <p className="font-semibold text-green-600">{tripDetails.fare}</p>
-              </div>
+            <div className="bg-green-50 rounded-xl p-2 flex flex-col items-center justify-center">
+              <span className="text-green-600 text-2xl mb-2">⏱️</span>
+              <p className="text-xs text-gray-500 font-medium">DURATION</p>
+              <p className="font-bold text-sm">{distanceData.distanceAndTime?.duration}</p>
+            </div>
+            <div className="bg-purple-50 rounded-xl p-2 flex flex-col items-center justify-center">
+              <span className="text-purple-600 text-2xl mb-2">💰</span>
+              <p className="text-xs text-gray-500 font-medium">FARE</p>
+              <p className="font-bold text-sm text-green-600">₹{rideData.data?.fare}</p>
             </div>
           </div>
 
           {/* Route Details */}
-          <div className="space-y-3 mb-6">
-            <div className="flex">
-              <div className="flex flex-col items-center mr-3">
-                <div className="bg-green-500 h-4 w-4 rounded-full"></div>
-                <div className="border-l-2 border-dashed border-gray-300 h-6"></div>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 font-medium">PICKUP</p>
-                <p className="text-sm">{pickup || "123 Main Street, Downtown Area"}</p>
-              </div>
-            </div>
+          <div className="space-y-4 mb-6">
+           
 
-            <div className="flex">
-              <div className="flex flex-col items-center mr-3">
-                <div className="border-2 border-red-500 h-4 w-4 rounded-full"></div>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 font-medium">DROP-OFF</p>
-                <p className="text-sm">{dropoff || "456 Park Avenue, Business District"}</p>
+            <div className="flex items-center">
+              <span className="mr-4 text-red-600 text-xl">🔴</span>
+              <div>
+                <p className="text-xs text-gray-500 font-medium">DROP-OFF LOCATION</p>
+                <p className="text-sm font-medium">{rideData.data?.destination}</p>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            
-            
-            <button 
-              onClick={onCompleteRide}
-              className="w-full bg-black text-white py-3 rounded-lg font-medium flex items-center justify-center"
-            >
-              <i className="ri-checkbox-circle-line mr-2"></i>
-              Complete
-            </button>
-          </div>
+          {/* Complete Ride Button */}
+          <button 
+            onClick={onCompleteRide}
+            className="w-full bg-green-500 text-white py-3 -mt-2 rounded-xl font-semibold text-lg flex items-center justify-center shadow-md hover:bg-green-600 transition-colors"
+          >
+            <i className="ri-checkbox-circle-line mr-3 text-xl"></i>
+            Complete Ride
+          </button>
         </div>
       </div>
+
+      {/* Payment Complete Popup */}
+      <PaymentComplete 
+        isVisible={isPaymentCompleteVisible}
+        onClose={handleClosePaymentComplete}
+        onCompleteRide={onCompleteRide}
+      />
     </div>
   );
 };

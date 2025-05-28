@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
 
-const OTPpanel = ({ onVerify, ride }) => {
+const OTPpanel = ({ onVerify,distance, ride }) => {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ const OTPpanel = ({ onVerify, ride }) => {
       if(response.status === 200) {
         console.log("OTP verified successfully:", response.data);
         //alert("OTP verified successfully");
-        navigate("/captain-riding", {state: {ride: ride}});
+        navigate("/captain-riding", {state: {ride: ride, distance: distance}});
       }
       // Handle successful OTP verification
     
