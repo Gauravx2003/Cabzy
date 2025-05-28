@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import 'remixicon/fonts/remixicon.css';
 
-const PaymentComplete = ({ isVisible, onClose, onCompleteRide }) => {
+const PaymentComplete = ({ isVisible, onClose }) => {
   const [showCheckmark, setShowCheckmark] = useState(false);
   const navigate = useNavigate();
 
@@ -20,7 +20,7 @@ const PaymentComplete = ({ isVisible, onClose, onCompleteRide }) => {
   }, [isVisible]);
 
   const handleMoveToDeck = () => {
-    onCompleteRide();
+    navigate('/captain-home');
     if (onClose) onClose();
   };
 

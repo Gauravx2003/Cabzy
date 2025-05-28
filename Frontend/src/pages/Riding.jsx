@@ -8,6 +8,7 @@ import axios from "axios";
 import LiveDistanceOverlay from "../components/LiveDistanceOverlay";
 
 const Riding = ({ selectedRide, pickup, dropoff }) => {
+
   const driverInfo = {
     name: "Captain Alex",
     rating: 4.8,
@@ -20,6 +21,7 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
   const location = useLocation();
   const rideData = location.state?.ride || {};
   const navigate = useNavigate();
+
   const { socket } = useContext(SocketContext);
   const [LiveDistance, setLiveDistance] = React.useState({});
   const destinationRef = React.useRef({});
@@ -185,6 +187,7 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
 
     return () => {
       if (socket) {
+        socket.off("rideEnded");
         socket.off("rideEnded");
       }
     };  

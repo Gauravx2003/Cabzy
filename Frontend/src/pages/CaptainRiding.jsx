@@ -1,4 +1,4 @@
-import React,{useEffect, useRef, useContext } from "react";
+import React,{useEffect, useRef, useContext, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 //import { useRef } from "react";
 import mp from "../assets/images/map.jpg"; // Map image placeholder
@@ -11,7 +11,9 @@ import PaymentComplete from "../components/PaymentComplete"; // Import the Payme
 import LiveDistanceOverlay from "../components/LiveDistanceOverlay";
 
 const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
-  // User data for the confirmed ride
+  const [showPaymentComplete, setShowPaymentComplete] = useState(false);
+  
+  
   const userInfo = {
     name: "Sarah Johnson",
     rating: 4.7,
@@ -20,7 +22,6 @@ const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
     otp: "2847"
   };
 
-  // Trip details
   const tripDetails = {
     distance: "3.8 km",
     duration: "15 mins",
@@ -65,8 +66,6 @@ const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
       if (response.status === 200) {
         console.log("Ride completed successfully:", response.data);
         navigate("/captain-home");
-
-        // Handle successful ride completion
       }
     } catch (error) {
       console.error("Error completing ride:", error.response?.data || error.message);
