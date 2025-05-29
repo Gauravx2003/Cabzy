@@ -6,7 +6,10 @@ const app = express();
 
 const cookieParser = require('cookie-parser');
 const cors = require("cors");
-app.use(cors());
+app.use(cors({
+  origin: "https://cabzy-s4qx.vercel.app/", // or use an env variable for flexibility
+  credentials: true,
+}));
 
 const connectDB = require('./db/db');
 connectDB();
