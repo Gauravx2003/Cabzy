@@ -5,7 +5,7 @@ import UserLogin from "./pages/UserLogin";
 import CaptainLogin from "./pages/CaptainLogin";
 import CaptainSignup from "./pages/CaptainSignup";
 import UserSignup from "./pages/UserSignup";
-import Home from "./pages/Temp";
+import Home from "./pages/home";
 import  UserContext, { UserDataContext } from "./context/UserContext";
 import './style.css';
 import UserProtectWrapper from "./pages/UserProtectWrapper";
