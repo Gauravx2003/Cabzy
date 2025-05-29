@@ -15,7 +15,7 @@ const userRoutes = require("./routes/user.routes");
 const captainRoutes = require("./routes/captain.routes");
 const mapsRoutes = require("./routes/maps.routes");
 const rideRoutes = require("./routes/ride.routes");
-const paymentRoutes = require("./routes/payment.routes");
+const paymentRoutes = require("./routes/payments.routes");
 
 app.use(cookieParser());
 app.use(express.json());
