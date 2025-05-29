@@ -226,6 +226,13 @@ const Home = () => {
   }, [user, socket]); // Runs only when user/socket change
 
   useEffect(() => {
+    if (socket && user?._id) {
+      socket.emit("join", { userId: user._id, type: "user" });
+    }
+  }, [socket, user]);
+  
+
+  useEffect(() => {
     if(socket){
       socket.on("rideAccepted", (data) => {
         console.log("Ride accepted:", data);
@@ -277,14 +284,14 @@ useEffect(() => {
       
       {/* Panel Container */}
       <div 
-        className={`absolute w-full h-full transition-all duration-400 ease-in-out ${
+        className={`absolute w-full h-full transition-all duration-400 ease-in-out z-20 ${
           isPanelExpanded ? "bottom-0" : "bottom-[-66%]"
         }`}
       >
         {/* Dropdown arrow - only visible when panel is expanded */}
         {isPanelExpanded && (
           <div 
-            className="bg-white rounded-full p-2 absolute top-3 right-5 cursor-pointer shadow-md z-20"
+            className="bg-white rounded-full p-1 absolute top-6 right-6 cursor-pointer shadow-md z-20"
             onClick={handleCollapsePanel}
           >
             <svg 

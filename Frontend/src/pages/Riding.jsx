@@ -188,7 +188,7 @@ const Riding = ({ selectedRide, pickup, dropoff }) => {
     return () => {
       if (socket) {
         socket.off("rideEnded");
-        socket.off("rideEnded");
+        
       }
     };  
   }, [socket, navigate]);

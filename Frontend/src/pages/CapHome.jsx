@@ -323,7 +323,7 @@ useEffect(() => {
           {/* Distance Travelled */}
           <div className="bg-green-50 rounded-xl p-2 flex flex-col items-center justify-center">
             <span className="text-green-600 text-xl mb-1">🚀</span>
-            <h5 className="text-xl font-bold">{captain.totalDistance} KM</h5>
+            <h5 className="text-base font-bold">{captain.totalDistance} KM</h5>
             <p className="text-gray-600 text-sm">Travelled</p>
           </div>
           

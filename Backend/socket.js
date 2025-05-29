@@ -24,6 +24,14 @@ const initializeSocket = (server) => {
 
         socket.on("disconnect", () => {
             console.log(`Socket disconnected: ${socket.id}`);
+           
+            // Remove user from map
+          for (let userId in socketUserMap) {
+            if (socketUserMap[userId] === socket.id) {
+            delete socketUserMap[userId];
+            break;
+        }
+    }
         });
 
         socket.on("join", async (data) => {
@@ -72,15 +80,7 @@ const initializeSocket = (server) => {
             }
         });
 
-        socket.on("disconnect", () => {
-          // Remove user from map
-          for (let userId in socketUserMap) {
-            if (socketUserMap[userId] === socket.id) {
-            delete socketUserMap[userId];
-            break;
-        }
-    }
-});
+        
 
     });
 
@@ -99,6 +99,8 @@ const sendMessageToSocketId = (userId, event, message) => {
         
         const socketId = socketUserMap[userId];
         console.log("Sendin to: ",socketId);
+        console.log("Current socketUserMap:", socketUserMap);
+
     if (socketId && io) {
         io.to(socketId).emit(event, message);
     } else {

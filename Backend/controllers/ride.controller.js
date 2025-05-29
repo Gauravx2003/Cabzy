@@ -120,7 +120,8 @@ module.exports.acceptRide = async (req, res) => {
             type: "rideAccepted",
             data: ride,
         };
-
+        
+        console.log("Sending to user with ID: ", ride.user._id.toString());
         sendMessageToSocketId(ride.user._id.toString(), "rideAccepted", message); // Send a message to the user's socket ID
         res.status(200).json(ride); // Send response with confirmed ride data
     } catch (error) {
