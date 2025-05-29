@@ -11,7 +11,7 @@ import './style.css';
 import UserProtectWrapper from "./pages/UserProtectWrapper";
 import UserLogout from "./pages/UserLogout";
 import CaptainProtectWrapper from "./pages/CaptainProtectWrapper";
-import CapHome from "./pages/temporar";
+import CapHome from "./pages/capHome";
 import CaptainLogout from "./pages/CaptainLogout";
 import Riding from "./pages/Riding";
 import CaptainRiding from "./pages/CaptainRiding";
