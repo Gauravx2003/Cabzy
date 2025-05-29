@@ -7,7 +7,11 @@ import mapUrl from "../assets/images/map.jpg";
 import RidePopUp from "../components/RidePopUp";
 import FinishRide from "../components/FinishRide";
 import axios from "axios";
+// Set default Axios settings
+axios.defaults.withCredentials = true;
 import 'remixicon/fonts/remixicon.css';
+
+
 
 
 

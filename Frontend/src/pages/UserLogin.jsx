@@ -4,6 +4,8 @@ import bg from "../assets/images/Cabzy_bg.png";
 import logo from "../assets/images/Cabzy_logo.png";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
+// Set default Axios settings
+axios.defaults.withCredentials = true;
 
 const UserLogin = () => {
     const [email, setEmail] = React.useState('');

@@ -6,6 +6,8 @@ import { useContext, useEffect } from "react";
 import {SocketContext} from "../context/SocketContext";
 import axios from "axios";
 import LiveDistanceOverlay from "../components/LiveDistanceOverlay";
+// Set default Axios settings
+axios.defaults.withCredentials = true;
 
 const Riding = ({ selectedRide, pickup, dropoff }) => {
 

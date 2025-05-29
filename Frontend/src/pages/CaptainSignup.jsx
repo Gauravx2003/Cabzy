@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/Cabzy_logo.png";
 import { CaptainDataContext } from "../context/CaptainContext";
 import axios from "axios";
+// Set default Axios settings
+axios.defaults.withCredentials = true;
 
 const CaptainSignup = () => {
     const [firstName, setFirstName] = React.useState('');

@@ -9,6 +9,8 @@ import {CaptainDataContext} from "../context/CaptainContext";
 import { SocketContext } from "../context/SocketContext";
 import PaymentComplete from "../components/PaymentComplete"; // Import the PaymentComplete component
 import LiveDistanceOverlay from "../components/LiveDistanceOverlay";
+// Set default Axios settings
+axios.defaults.withCredentials = true;
 
 const CaptainRiding = ({ confirmedRide, pickup, dropoff, onCompleteRide }) => {
   const [showPaymentComplete, setShowPaymentComplete] = useState(false);
