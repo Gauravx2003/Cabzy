@@ -7,7 +7,7 @@
 ## 📺 Demo Video
 
 Watch the working demo of Cabzy here:  
-[▶️ Cabzy Demo on YouTube](https://www.youtube.com/watch?v=your-demo-link)
+[▶️ Cabzy Demo on YouTube](https://youtu.be/x3yDUGanyvM)
 
 ---
 
