@@ -106,6 +106,15 @@ cd Frontend
 npm run dev
 ```
 
+## 🙏 Acknowledgments
+
+This project would not have been possible without the following technologies and services:
+
+- [Google Maps API](https://developers.google.com/maps) – For location services, geocoding, and route mapping  
+- [Razorpay](https://razorpay.com) – For seamless and secure payment integration  
+- [Socket.io](https://socket.io) – For real-time, bidirectional communication between client and server  
+- [MongoDB](https://www.mongodb.com) – As a flexible and scalable NoSQL database solution  
+
 
 
 
