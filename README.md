@@ -4,12 +4,9 @@
 
 ---
 
-## 📺 Demo Video
+## 📺 Demo
 
-Watch the working demo of Cabzy here:  
-[▶️ Cabzy Demo on YouTube](https://youtu.be/x3yDUGanyvM)
-
----
+[![Watch Demo](https://img.youtube.com/vi/x3yDUGanyvM/hqdefault.jpg)](https://youtu.be/x3yDUGanyvM)
 
 [LIVE DEMO](https://cabzy-s4qx.vercel.app/)
 
