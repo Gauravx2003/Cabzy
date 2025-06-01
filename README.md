@@ -15,6 +15,7 @@
 
 > 📝 **Tip:** To fully experience the system, you'll need two users — one as a **Passenger** and another as a **Captain (Driver)** — running simultaneously (e.g., in two browser windows or devices).
 
+---
 
 ## ✨ Features
 
