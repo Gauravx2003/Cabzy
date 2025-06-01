@@ -4,9 +4,12 @@
 
 ---
 
-## 📺 Demo
+## 📺 Demo Video ( Click the image )
 
 [![Watch Demo](https://img.youtube.com/vi/x3yDUGanyvM/hqdefault.jpg)](https://youtu.be/x3yDUGanyvM)
+
+---
+
 
 [LIVE DEMO](https://cabzy-s4qx.vercel.app/)
 
