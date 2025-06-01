@@ -78,3 +78,34 @@ Before running the app locally, make sure you have:
 1. Clone the repository
 ```bash
 git clone https://github.com/yourusername/cabzy.git
+```
+
+2. Install Backend Dependencies
+```bash
+cd Backend
+npm install
+```
+
+3. Install Frontend Dependencies
+```bash
+cd Frontend
+npm install
+```
+
+## ▶️ Running the Application
+
+1. Start the Backend Server
+```bash
+cd Backend
+npm run dev
+```
+
+2.Start the Frontend Dev Server
+```bash
+cd Frontend
+npm run dev
+```
+
+
+
+
